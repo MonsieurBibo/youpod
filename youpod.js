@@ -847,7 +847,7 @@ function sendMail(id, ep_title) {
     const mailOptions = {
       from: 'youpod@balado.tools', // sender address
       to: rows[0].email, // list of receivers
-      subject: `Vidéo générée sur Youpod!`, // Subject line
+      subject: `Vidéo générée sur Youpod : ${ep_title}`, // Subject line
       html: mustache.render(template, renderObj)
     };
     
