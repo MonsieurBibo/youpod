@@ -478,7 +478,11 @@ function flush() {
         time = time / (1000 * 60 * 60);
     
         if (time > config.keeping_time) {
-          fs.unlinkSync(path.join(pathEvalute(config.export_folder), `output_${rows[i].id}.mp4`))
+          try {
+            fs.unlinkSync(path.join(pathEvalute(config.export_folder), `output_${rows[i].id}.mp4`))
+          } catch (err) {
+            console.log(`Fichier output_${rows[i].id}.mp4 déjà supprimé`)
+          }
           db.run(`UPDATE video SET status='deleted' WHERE id=${rows[i].id}`);
           console.log("Flush video " + rows[i].id)
     
@@ -494,7 +498,11 @@ function flush() {
         time = time / (1000 * 60 * 60);
     
         if (time > config.keeping_time) {
-          fs.unlinkSync(path.join(pathEvalute(config.export_folder), `preview_${rows[i].id}.mp4`))
+          try {
+            fs.unlinkSync(path.join(pathEvalute(config.export_folder), `preview_${rows[i].id}.mp4`))
+          } catch (err) {
+            console.log(`Fichier preview_${rows[i].id}.mp4 déjà supprimé`)
+          }
           db.run(`UPDATE preview SET status='deleted' WHERE id=${rows[i].id}`);
           console.log("Flush preview " + rows[i].id)
     
