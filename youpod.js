@@ -284,36 +284,60 @@ app.get("/download/:id", (req, res) => {
 app.post("/addvideo", csrfProtection, (req, res) => {
   if (config.gen_pwd == "") {
     if (req.body.email != undefined && req.body.rss != undefined) {
-      if (req.body.selectEp == undefined) {
-        getLastGuid(req.body.rss, (guid)=> {
-          db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${guid}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
-          initNewGeneration();
-          res.sendFile(path.join(__dirname, "/web/done.html"))
-        })
-      } else {
-        db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${req.body.selectEp}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
-        initNewGeneration();
-        res.sendFile(path.join(__dirname, "/web/done.html"))
-      }
+      checkIfRss(req.body.rss, (is_rss) => {
+        if (is_rss) {
+          if (req.body.selectEp == undefined) {
+            getLastGuid(req.body.rss, (guid)=> {
+              db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${guid}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
+              initNewGeneration();
+              res.sendFile(path.join(__dirname, "/web/done.html"))
+            })
+          } else {
+            db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${req.body.selectEp}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
+            initNewGeneration();
+            res.sendFile(path.join(__dirname, "/web/done.html"))
+          }
+        } else {
+          template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
+    
+          var render_object = {
+            "err_message": "L'URL que vous avez entré " + req.body.rss + " n'est pas un flux RSS valide!"
+          }
+        
+          res.setHeader("content-type", "text/html");
+          res.send(mustache.render(template, render_object))
+        }
+      })
     } else {
       res.status(400).send("Votre requète n'est pas complète...")
     }
   } else {
     if (req.session.logged != undefined) {
       if (req.body.email != undefined && req.body.rss != undefined) {
-        if (req.body.selectEp == undefined) {
-          getLastGuid(req.body.rss, (guid)=> {
-            db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${guid}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
-            initNewGeneration();
-            res.sendFile(path.join(__dirname, "/web/done.html"))
-          })
-        } else {
-          db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${req.body.selectEp}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
-          initNewGeneration();
-          res.sendFile(path.join(__dirname, "/web/done.html"))
-        }
-
-
+        checkIfRss(req.body.rss, (is_rss) => {
+          if (is_rss) {
+            if (req.body.selectEp == undefined) {
+              getLastGuid(req.body.rss, (guid)=> {
+                db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${guid}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
+                initNewGeneration();
+                res.sendFile(path.join(__dirname, "/web/done.html"))
+              })
+            } else {
+              db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${req.body.selectEp}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
+              initNewGeneration();
+              res.sendFile(path.join(__dirname, "/web/done.html"))
+            }
+          } else {
+            template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
+    
+            var render_object = {
+              "err_message": "L'URL que vous avez entré " + req.body.rss + " n'est pas un flux RSS valide!"
+            }
+          
+            res.setHeader("content-type", "text/html");
+            res.send(mustache.render(template, render_object))
+          }
+        })
       } else {
         res.status(400).send("Votre requète n'est pas complète...")
       }
@@ -327,6 +351,12 @@ function getLastGuid(feed_url, __callback) {
   parser.parseURL(feed_url, (err, feed) => {
     __callback(feed.items[0].guid)
     
+  })
+}
+
+function checkIfRss(feed_url, __callback) {
+  parser.parseURL(feed_url, (err, feed) => {
+    __callback(feed != undefined);
   })
 }
 
@@ -453,24 +483,39 @@ app.get("/api/video/:id", (req, res) => {
 })
 
 app.get("/api/feed", (req, res) => {
-  parser.parseURL(req.query.url, (err, feed) => {
-    resObj = {
-      data: []
+  checkIfRss(req.query.url, (is_feed) => {
+    if (is_feed) {
+      parser.parseURL(req.query.url, (err, feed) => {
+        resObj = {
+          data: [],
+          message: "Flux " + req.query.url + " trouvé"
+        }
+    
+        feed.items.forEach((i) => {
+          o = {
+            title: i.title,
+            guid: i.guid.replace("<![CDATA[", "").replace("]]>", "")
+          }
+    
+          resObj.data.push(o)
+        })
+    
+        res.header("Access-Control-Allow-Origin", config.host);
+        res.header("Access-Control-Allow-Methods", "GET");
+        res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
+        res.status(200).json(resObj);
+      })
+    } else {
+      resObj = {
+        data: [],
+        message: "Le flux n'est pas un flux RSS valide"
+      }
+      res.header("Access-Control-Allow-Origin", config.host);
+      res.header("Access-Control-Allow-Methods", "GET");
+      res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
+      res.status(400).json(resObj);
     }
 
-    feed.items.forEach((i) => {
-      o = {
-        title: i.title,
-        guid: i.guid.replace("<![CDATA[", "").replace("]]>", "")
-      }
-
-      resObj.data.push(o)
-    })
-
-    res.header("Access-Control-Allow-Origin", config.host);
-    res.header("Access-Control-Allow-Methods", "GET");
-    res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
-    res.status(200).json(resObj);
   })
 })
 
