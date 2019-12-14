@@ -363,7 +363,7 @@ function checkIfRss(feed_url, __callback) {
 app.post("/addvideocustom", csrfProtection, (req, res) => {
   if (config.gen_pwd == "") {
     if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
-        db.run(`INSERT INTO video(email, rss, template, access_token, epTitle, epImg, podTitle, podSub, audioURL) VALUES ("${req.body.email}", "__custom__", ?, "${randtoken.generate(32)}", ?, ?, ?, ?, ?)`, [req.body.template, req.body.epTitle, req.body.imgURL, req.body.podTitle, req.body.podSub, req.body.audioURL])    
+        db.run(`INSERT INTO video(email, rss, template, access_token, epTitle, epImg, podTitle, podSub, audioURL, font) VALUES ("${req.body.email}", "__custom__", ?, "${randtoken.generate(32)}", ?, ?, ?, ?, ?, ?)`, [req.body.template, req.body.epTitle, req.body.imgURL, req.body.podTitle, req.body.podSub, req.body.audioURL, req.body["font-choice"]])    
       
         initNewGeneration();
         res.sendFile(path.join(__dirname, "/web/done.html"))  
@@ -373,7 +373,7 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
   } else {
     if (req.session.logged != undefined) {
       if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
-        db.run(`INSERT INTO video(email, rss, template, access_token, epTitle, epImg, podTitle, podSub, audioURL) VALUES ("${req.body.email}", "__custom__", ?, "${randtoken.generate(32)}", ?, ?, ?, ?, ?)`, [req.body.template, req.body.epTitle, req.body.imgURL, req.body.podTitle, req.body.podSub, req.body.audioURL])    
+        db.run(`INSERT INTO video(email, rss, template, access_token, epTitle, epImg, podTitle, podSub, audioURL, font) VALUES ("${req.body.email}", "__custom__", ?, "${randtoken.generate(32)}", ?, ?, ?, ?, ?, ?)`, [req.body.template, req.body.epTitle, req.body.imgURL, req.body.podTitle, req.body.podSub, req.body.audioURL, req.body["font-choice"]])    
       
         initNewGeneration();
         res.sendFile(path.join(__dirname, "/web/done.html"))  
@@ -659,7 +659,8 @@ function generateImgCustom(id) {
       "epTitle": row.epTitle,
       "podTitle": row.podTitle,
       "podSub": row.podSub,
-      "font": "Montserrat"
+      "font": row.font,
+      "font_url": row.font.replace(/ /g, "+")
     }
 
     string = mustache.render(template, renderObj);
