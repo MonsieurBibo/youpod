@@ -1,5 +1,5 @@
-const cors = "https://cors-anywhere.herokuapp.com/"
 const parser = new DOMParser();
+
 
 function fetchFeed() {
     sel = document.getElementById("selectEp")
@@ -7,30 +7,25 @@ function fetchFeed() {
     inp = document.getElementById("rss")
     
     myHeader = new Headers();
-    myHeader.append("Origin", "h.goud.so")
+    myHeader.append("Origin", window.location.origin)
 
-    fetch(cors + inp.value, {
+    fetch(window.location.origin + "/api/feed?url=" + inp.value, {
         "headers": myHeader
     })
         .then((res) => {
             if (res.ok)
-                return res.text();
+                return res.json();
             else
                 console.log(res)
         })    
-        .then((text) => {
-            xmlDoc = parser.parseFromString(text,"text/xml");
-
-            items = xmlDoc.getElementsByTagName("item")
-
-            for(i = 0; i < items.length; i++) {
+        .then((json) => {
+            json.data.forEach((e) => {
                 o = document.createElement("option")
-                o.innerHTML = items[i].getElementsByTagName("title")[0].innerHTML.replace("<![CDATA[", "").replace("]]>", "")
-                o.setAttribute("value", items[i].getElementsByTagName("guid")[0].innerHTML)
+                o.innerHTML = e.title
+                o.setAttribute("value", e.guid)
 
                 sel.appendChild(o)
-            }
-
+            })
             sel.removeAttribute("disabled")
             sel.removeChild(sel.querySelector("option"))
         })

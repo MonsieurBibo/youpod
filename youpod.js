@@ -452,6 +452,28 @@ app.get("/api/video/:id", (req, res) => {
   }  
 })
 
+app.get("/api/feed", (req, res) => {
+  parser.parseURL(req.query.url, (err, feed) => {
+    resObj = {
+      data: []
+    }
+
+    feed.items.forEach((i) => {
+      o = {
+        title: i.title,
+        guid: i.guid.replace("<![CDATA[", "").replace("]]>", "")
+      }
+
+      resObj.data.push(o)
+    })
+
+    res.header("Access-Control-Allow-Origin", config.host);
+    res.header("Access-Control-Allow-Methods", "GET");
+    res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
+    res.status(200).json(resObj);
+  })
+})
+
 // FONCTION DE GENERATIONS
 function restartGeneration() {
   console.log("Reprise de générations...")
