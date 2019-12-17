@@ -5,7 +5,6 @@ const Parser = require("rss-parser");
 const download = require('download');
 const { spawn } = require('child_process');
 const express = require('express')
-const config = require("./config.json")
 const bodyParser = require('body-parser');
 const randtoken = require('rand-token');
 const sq = require('sqlite3');
@@ -14,12 +13,13 @@ const puppeteer = require('puppeteer');
 const session = require('express-session');
 const csurf = require('csurf')
 const getMP3Duration = require('get-mp3-duration')
+require('dotenv').config()
 
 var transporter = nodemailer.createTransport({
 	service: 'gmail',
 	auth: {
-		   user: config.mail,
-		   pass: config.password
+		   user: process.env.GMAIL_ADDR,
+		   pass: process.env.GMAIL_PWD
 	   }
 });
 
@@ -34,7 +34,7 @@ var csrfProtection = csurf()
 
 //Configuration du cookie de session
 app.use(session({
-  secret: config.cookie_secret,
+  secret: process.env.COOKIE_SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false }
@@ -95,14 +95,14 @@ app.get("/login", csrfProtection, (req, res) => {
 
 app.post("/authenticate", csrfProtection, (req, res) => {
   if (req.body.password != undefined) {
-    if (req.body.password != config.gen_pwd) {
+    if (req.body.password != process.env.GEN_PWD) {
       req.session.message = "Mot de passe incorrect";
 
       req.session.save(function(err) {
         res.redirect("/login?return=" + req.body.return)
       })
     } else {
-      if (req.body.password == config.gen_pwd) {
+      if (req.body.password == process.env.GEN_PWD) {
         req.session.logged = true;
         req.session.message = undefined;
 
@@ -122,13 +122,13 @@ app.post("/authenticate", csrfProtection, (req, res) => {
 })
 
 app.get("/preview", csrfProtection, (req, res) => {
-  if (config.gen_pwd == "") {
+  if (process.env.GEN_PWD == "") {
     db.all(`SELECT count(*) FROM preview WHERE status='waiting' OR status='during'`, (err, rows) => {
       template = fs.readFileSync(path.join(__dirname, "/web/preview.mustache"), "utf8")
 
       var render_object = {
         "waiting_list": rows[0]["count(*)"],
-        "keeping_time": config.keeping_time,
+        "keeping_time": process.env.KEEPING_TIME,
         "csrfToken": req.csrfToken
       }
     
@@ -142,7 +142,7 @@ app.get("/preview", csrfProtection, (req, res) => {
   
         var render_object = {
           "waiting_list": rows[0]["count(*)"],
-          "keeping_time": config.keeping_time,
+          "keeping_time": process.env.KEEPING_TIME,
           "csrfToken": req.csrfToken
         }
       
@@ -156,13 +156,13 @@ app.get("/preview", csrfProtection, (req, res) => {
 })
 
 app.get("/custom", csrfProtection, (req, res) => {
-  if (config.gen_pwd == "") {
+  if (process.env.GEN_PWD == "") {
     db.all(`SELECT count(*) FROM video WHERE status='waiting' OR status='during'`, (err, rows) => {
       template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
 
       var render_object = {
         "waiting_list": rows[0]["count(*)"],
-        "keeping_time": config.keeping_time,
+        "keeping_time": process.env.KEEPING_TIME,
         "csrfToken": req.csrfToken
       }
     
@@ -176,8 +176,8 @@ app.get("/custom", csrfProtection, (req, res) => {
   
         var render_object = {
           "waiting_list": rows[0]["count(*)"],
-          "keeping_time": config.keeping_time,
-          "need_pass": config.gen_pwd!="",
+          "keeping_time": process.env.KEEPING_TIME,
+          "need_pass": process.env.GEN_PWD!="",
           "csrfToken": req.csrfToken
         }
       
@@ -191,14 +191,14 @@ app.get("/custom", csrfProtection, (req, res) => {
 })
 
 app.get("/", csrfProtection, (req, res) => {
-  if (config.gen_pwd == "") {
+  if (process.env.GEN_PWD == "") {
     db.all(`SELECT count(*) FROM video WHERE status='waiting' OR status='during'`, (err, rows) => {
       template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
   
       var render_object = {
         "waiting_list": rows[0]["count(*)"],
-        "keeping_time": config.keeping_time,
-        "need_pass": config.gen_pwd!="",
+        "keeping_time": process.env.KEEPING_TIME,
+        "need_pass": process.env.GEN_PWD!="",
         "csrfToken": req.csrfToken
       }
     
@@ -212,8 +212,8 @@ app.get("/", csrfProtection, (req, res) => {
     
         var render_object = {
           "waiting_list": rows[0]["count(*)"],
-          "keeping_time": config.keeping_time,
-          "need_pass": config.gen_pwd!="",
+          "keeping_time": process.env.KEEPING_TIME,
+          "need_pass": process.env.GEN_PWD!="",
           "csrfToken": req.csrfToken
         }
       
@@ -235,7 +235,7 @@ app.get("/download/preview/:id", (req, res) => {
           res.status(403).send("Vous n'avez pas accès à cette preview")
         } else {
           if (rows[0].status == 'finished') {
-            res.download(path.join(pathEvalute(config.export_folder), `preview_${rows[0].id}.mp4`), `youpod_preview_${rows[0].end_timestamp}.mp4`)
+            res.download(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${rows[0].id}.mp4`), `youpod_preview_${rows[0].end_timestamp}.mp4`)
           } else if (rows[0].status == 'deleted') {
             res.status(404).send("Cette vidéo à été supprimée du site!")
           } else if (rows[0].status == 'during') {
@@ -262,7 +262,7 @@ app.get("/download/:id", (req, res) => {
           res.status(403).send("Vous n'avez pas accès à cette vidéo")
         } else {
           if (rows[0].status == 'finished') {
-            res.download(path.join(pathEvalute(config.export_folder), `output_${rows[0].id}.mp4`), `youpod_${rows[0].end_timestamp}.mp4`)
+            res.download(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${rows[0].id}.mp4`), `youpod_${rows[0].end_timestamp}.mp4`)
           } else if (rows[0].status == 'deleted') {
             res.status(404).send("Cette vidéo à été supprimée du site!")
           } else if (rows[0].status == 'during') {
@@ -282,7 +282,7 @@ app.get("/download/:id", (req, res) => {
 })
 
 app.post("/addvideo", csrfProtection, (req, res) => {
-  if (config.gen_pwd == "") {
+  if (process.env.GEN_PWD == "") {
     if (req.body.email != undefined && req.body.rss != undefined) {
       checkIfRss(req.body.rss, (is_rss) => {
         if (is_rss) {
@@ -361,7 +361,7 @@ function checkIfRss(feed_url, __callback) {
 }
 
 app.post("/addvideocustom", csrfProtection, (req, res) => {
-  if (config.gen_pwd == "") {
+  if (process.env.GEN_PWD == "") {
     if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
         db.run(`INSERT INTO video(email, rss, template, access_token, epTitle, epImg, podTitle, podSub, audioURL, font) VALUES ("${req.body.email}", "__custom__", ?, "${randtoken.generate(32)}", ?, ?, ?, ?, ?, ?)`, [req.body.template, req.body.epTitle, req.body.imgURL, req.body.podTitle, req.body.podSub, req.body.audioURL, req.body["font-choice"]])    
       
@@ -388,7 +388,7 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
 })
 
 app.post("/addvideopreview", csrfProtection, (req, res) => {
-  if (config.gen_pwd == "") {
+  if (process.env.GEN_PWD == "") {
     if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined) {
       if (req.body.color == undefined) {
         color = "blanc"
@@ -428,7 +428,7 @@ app.post("/addvideopreview", csrfProtection, (req, res) => {
 })
 
 app.post("/api/video", (req, res) => {
-  if (req.query.pwd != undefined && req.query.pwd == config.api_pwd) {
+  if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
     if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
       
       db.run(`INSERT INTO video(email, rss, template, access_token, epTitle, epImg, podTitle, podSub, audioURL) VALUES ("${req.body.email}", "__custom__", ?, "${randtoken.generate(32)}", ?, ?, ?, ?, ?)`, [req.body.template, req.body.epTitle, req.body.imgURL, req.body.podTitle, req.body.podSub, req.body.audioURL], function(err) {
@@ -452,7 +452,7 @@ app.post("/api/video", (req, res) => {
 })
 
 app.get("/api/video/:id", (req, res) => {
-  if (req.query.pwd != undefined && req.query.pwd == config.api_pwd) {
+  if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
     if (req.query.token != undefined) {
       db.all(`SELECT * FROM video WHERE id='${req.params.id}'`, (err, rows) => {
         if (rows.length > 0) {
@@ -460,11 +460,11 @@ app.get("/api/video/:id", (req, res) => {
             returnObj = {
               id: rows[0].id, 
               status: rows[0].status, 
-              download_url: config.host + "/download/" + rows[0].id + "?token=" + rows[0].access_token
+              download_url: process.env.HOST + "/download/" + rows[0].id + "?token=" + rows[0].access_token
             }
 
             if (rows[0].status == "finished") {
-              returnObj.delete_timestamp = parseInt(rows[0].end_timestamp) + (config.keeping_time * 60 * 60 * 1000) 
+              returnObj.delete_timestamp = parseInt(rows[0].end_timestamp) + (process.env.KEEPING_TIME * 60 * 60 * 1000) 
             }
             res.status(200).json(returnObj);
           } else {
@@ -500,7 +500,7 @@ app.get("/api/feed", (req, res) => {
           resObj.data.push(o)
         })
     
-        res.header("Access-Control-Allow-Origin", config.host);
+        res.header("Access-Control-Allow-Origin", process.env.HOST);
         res.header("Access-Control-Allow-Methods", "GET");
         res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
         res.status(200).json(resObj);
@@ -510,7 +510,7 @@ app.get("/api/feed", (req, res) => {
         data: [],
         message: "Le flux n'est pas un flux RSS valide"
       }
-      res.header("Access-Control-Allow-Origin", config.host);
+      res.header("Access-Control-Allow-Origin", process.env.HOST);
       res.header("Access-Control-Allow-Methods", "GET");
       res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
       res.status(400).json(resObj);
@@ -544,9 +544,9 @@ function flush() {
         time = Date.now() - rows[i].end_timestamp
         time = time / (1000 * 60 * 60);
     
-        if (time > config.keeping_time) {
+        if (time > process.env.KEEPING_TIME) {
           try {
-            fs.unlinkSync(path.join(pathEvalute(config.export_folder), `output_${rows[i].id}.mp4`))
+            fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${rows[i].id}.mp4`))
           } catch (err) {
             console.log(`Fichier output_${rows[i].id}.mp4 déjà supprimé`)
           }
@@ -564,9 +564,9 @@ function flush() {
         time = Date.now() - rows[i].end_timestamp
         time = time / (1000 * 60 * 60);
     
-        if (time > config.keeping_time) {
+        if (time > process.env.KEEPING_TIME) {
           try {
-            fs.unlinkSync(path.join(pathEvalute(config.export_folder), `preview_${rows[i].id}.mp4`))
+            fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${rows[i].id}.mp4`))
           } catch (err) {
             console.log(`Fichier preview_${rows[i].id}.mp4 déjà supprimé`)
           }
@@ -581,7 +581,7 @@ function flush() {
 
 function initNewGeneration() {
   db.all(`SELECT count(*) FROM video WHERE status='during'`, (err, rows) => {
-    if (rows[0]["count(*)"] < config.max_during) {
+    if (rows[0]["count(*)"] < process.env.MAX_DURING) {
       db.all(`SELECT * FROM video WHERE status='waiting'`, (err, rows) => {
         if(rows.length >= 1) {
           db.run(`UPDATE video SET status='during' WHERE id=${rows[0].id}`);
@@ -596,7 +596,7 @@ function initNewGeneration() {
   })
 
   db.all(`SELECT count(*) FROM preview WHERE status='during'`, (err, rows) => {
-    if (rows[0]["count(*)"] < config.max_during_preview) {
+    if (rows[0]["count(*)"] < process.env.MAX_DURING_PREVIEW) {
       db.all(`SELECT * FROM preview WHERE status='waiting'`, (err, rows) => {
         if(rows.length >= 1) {
           db.run(`UPDATE preview SET status='during' WHERE id=${rows[0].id}`);
@@ -781,7 +781,7 @@ function generateVideoPreview(id, time, color) {
 
   s = parseInt(time.split(":")[0] * 60) + parseInt(time.split(":")[1])
 
-  var child = spawn("ffmpeg", ["-y", "-i", `./tmp/preview_${id}.png`, "-i", `./assets/${color}.mov`, "-filter_complex", 'overlay=0:0', "-ss", s, "-to", s + 20, "-i", `./tmp/preview_${id}.mp3`, "-shortest", "-acodec", "aac", `${config.export_folder}/preview_${id}.mp4`]);
+  var child = spawn("ffmpeg", ["-y", "-i", `./tmp/preview_${id}.png`, "-i", `./assets/${color}.mov`, "-filter_complex", 'overlay=0:0', "-ss", s, "-to", s + 20, "-i", `./tmp/preview_${id}.mp3`, "-shortest", "-acodec", "aac", `${process.env.EXPORT_FOLDER}/preview_${id}.mp4`]);
 
   child.stdout.on('data', function (data) {
     console.log("Preview " +id + ' stdout: ' + data);
@@ -818,7 +818,7 @@ function generateVideo(id, ep_title) {
   });
 
   ol.on('close', function (code) {
-    var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/loop_${id}.mp4`, "-i", `./tmp/audio_${id}.mp3`, "-c:v", "copy", "-c:a", "aac", "-shortest", "-map", "0:v", "-map", "1:a", `${config.export_folder}/output_${id}.mp4`]);
+    var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/loop_${id}.mp4`, "-i", `./tmp/audio_${id}.mp3`, "-c:v", "copy", "-c:a", "aac", "-shortest", "-map", "0:v", "-map", "1:a", `${process.env.EXPORT_FOLDER}/output_${id}.mp4`]);
 
     child.stdout.on('data', function (data) {
       console.log(id + ' stdout: ' + data);
@@ -849,8 +849,8 @@ function sendMailPreview(id) {
     template = fs.readFileSync(path.join(__dirname, "/web/mail_custom.mustache"), "utf8")
     renderObj = {
       "ep_title": rows[0].epTitle,
-      "keeping_time": config.keeping_time,
-      "video_link": config.host + "/download/preview/" + id + "?token=" + rows[0].access_token
+      "keeping_time": process.env.KEEPING_TIME,
+      "video_link": process.env.HOST + "/download/preview/" + id + "?token=" + rows[0].access_token
     }
 
 
@@ -876,16 +876,16 @@ function sendMail(id, ep_title) {
       template = fs.readFileSync(path.join(__dirname, "/web/mail.mustache"), "utf8")
       renderObj = {
         "rss_link": rows[0].rss,
-        "keeping_time": config.keeping_time,
+        "keeping_time": process.env.KEEPING_TIME,
         "epTitle": ep_title,
-        "video_link": config.host + "/download/" + id + "?token=" + rows[0].access_token
+        "video_link": process.env.HOST + "/download/" + id + "?token=" + rows[0].access_token
       }
     } else {
       template = fs.readFileSync(path.join(__dirname, "/web/mail_custom.mustache"), "utf8")
       renderObj = {
         "ep_title": rows[0].epTitle,
-        "keeping_time": config.keeping_time,
-        "video_link": config.host + "/download/" + id + "?token=" + rows[0].access_token
+        "keeping_time": process.env.KEEPING_TIME,
+        "video_link": process.env.HOST + "/download/" + id + "?token=" + rows[0].access_token
       }
     }
 
@@ -928,5 +928,5 @@ function pathEvalute(arg_path) {
 	}
 }
 
-//Ouverture du serveur Web sur le port définit dans config.json
-app.listen(config.port, () => console.log(`Serveur lancé sur le port ${config.port}`))
+//Ouverture du serveur Web sur le port définit dans les variables d'environnement
+app.listen(process.env.PORT, () => console.log(`Serveur lancé sur le port ${process.env.PORT}`))
