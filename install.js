@@ -5,19 +5,19 @@ const sq = require('sqlite3');
 console.log("Création des fichiers de base")
 
 if (!fs.existsSync(path.join(__dirname, "/config.json"))) {
-    fs.writeFileSync(path.join(__dirname, "/config.json"), `{
-        "port": 5674,
-        "max_during": 1,
-        "max_during_preview": 1,
-        "keeping_time": 12,
-        "host": "http://localhost:5674",
-        "mail": "youpod@example.com",
-        "password": "your_password",
-        "export_folder": "./video/",
-        "gen_pwd": "",
-        "api_pwd": "123456",
-        "cookie_secret": "IDK"
-    }`)
+    fs.writeFileSync(path.join(__dirname, ".env"), `
+PORT=5674
+MAX_DURING=1
+MAX_DURIN_PREVIEW=1
+KEEPING_TIME=12
+HOST=http://localhost:5674
+GMAIL_ADDR=someone@example.com
+GMAIL_PWD=123456
+EXPORT_FOLDER=./video
+GEN_PWD=
+API_PWD=123456
+ADMIN_PWD=123456
+COOKIE_SECRET=IDK`)
 }
 
 if (!fs.existsSync(path.join(__dirname, "/base.db"))) {
