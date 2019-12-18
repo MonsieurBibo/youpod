@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Videos', {
+    return queryInterface.createTable('Previews', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -12,47 +12,50 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      rss: {
+      epTitle: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      podTitle: {
         type: Sequelize.STRING,
         allowNull: false
       },
-      guid: {
+      imgLink: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      audioLink: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      color: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      startTime: {
         type: Sequelize.STRING
-      },
-      template: {
-        type: Sequelize.TEXT
-      },
-      access_token: {
-        type: Sequelize.STRING,
-        allowNull: false
       },
       end_timestamp: {
         type: Sequelize.INTEGER
       },
+      access_token: {
+        type: Sequelize.STRING
+      },
       status: {
         type: Sequelize.STRING,
-        allowNull: false,
         defaultValue: "waiting"
       },
-      font: {
-        type: Sequelize.STRING
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE
       },
-      epTitle: {
-        type: Sequelize.STRING
-      },
-      podTitle: {
-        type: Sequelize.STRING
-      },
-      podSub : {
-        type: Sequelize.STRING
-      },
-      audioURL: {
-        type: Sequelize.STRING
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE
       }
-
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('Videos');
+    return queryInterface.dropTable('Previews');
   }
 };

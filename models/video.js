@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
     guid: DataTypes.STRING,
     template: DataTypes.TEXT,
     access_token: DataTypes.STRING,
-    end_timestamp: DataTypes.STRING,
+    end_timestamp: DataTypes.INTEGER,
     status: DataTypes.STRING,
     font: DataTypes.STRING,
     epTitle: DataTypes.STRING,
