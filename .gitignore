@@ -62,7 +62,8 @@ typings/
 
 tmp
 loop
-base.db 
+base.db
+baseSequelize.db 
 video
 preview
 log.txt
