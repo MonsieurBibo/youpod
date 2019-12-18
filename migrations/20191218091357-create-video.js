@@ -10,11 +10,17 @@ module.exports = {
       },
       email: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          isEmail: true
+        }
       },
       rss: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          isUrl: true
+        }
       },
       guid: {
         type: Sequelize.STRING
@@ -32,7 +38,10 @@ module.exports = {
       status: {
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: "waiting"
+        defaultValue: "waiting",
+        validate: {
+          isIn: ["waiting","during","finished","deleted","error"]
+        }
       },
       font: {
         type: Sequelize.STRING
@@ -47,7 +56,10 @@ module.exports = {
         type: Sequelize.STRING
       },
       audioURL: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        validate: {
+          isUrl: true
+        }
       }
 
     });

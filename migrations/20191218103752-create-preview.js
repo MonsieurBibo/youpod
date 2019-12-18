@@ -10,7 +10,10 @@ module.exports = {
       },
       email: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          isEmail: true
+        }
       },
       epTitle: {
         type: Sequelize.STRING,
@@ -22,11 +25,17 @@ module.exports = {
       },
       imgLink: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          isUrl: true
+        }
       },
       audioLink: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          isUrl: true
+        }
       },
       color: {
         type: Sequelize.STRING,
@@ -43,7 +52,11 @@ module.exports = {
       },
       status: {
         type: Sequelize.STRING,
-        defaultValue: "waiting"
+        defaultValue: "waiting",
+        allowNull: false,
+        validate: {
+          isIn: ["waiting","during","finished","deleted","error"]
+        }
       },
       createdAt: {
         allowNull: false,
