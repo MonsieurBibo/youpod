@@ -35,6 +35,7 @@
     "puppeteer": "^2.0.0",
     "rand-token": "^0.4.0",
     "rss-parser": "^3.7.3",
+    "sequelize": "^5.21.3",
     "sqlite3": "^4.1.0"
   }
 }

@@ -121,6 +121,23 @@ app.post("/authenticate", csrfProtection, (req, res) => {
   }
 })
 
+/*app.get("/admin", (req, res) => {
+  template = fs.readFileSync(path.join(__dirname, "/web/admin.mustache"), "utf8")
+
+
+
+  var render_object = {
+    nb_gen_video: 
+    nb_save_video:
+    nb_waiting_video:
+    nb_rss_feed: 
+    size_export_folder:
+  }
+
+  res.setHeader("content-type", "text/html");
+  res.send(mustache.render(template, render_object))
+})*/
+
 app.get("/preview", csrfProtection, (req, res) => {
   if (process.env.GEN_PWD == "") {
     db.all(`SELECT count(*) FROM preview WHERE status='waiting' OR status='during'`, (err, rows) => {
