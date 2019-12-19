@@ -43,15 +43,11 @@ app.use(session({
   cookie: { secure: false }
 }))
 
-var conditionalCSRF = function (req, res, next) {
-  if (!req.path.includes("api")) {
-    csrf(req, res, next);
-  } else {
-    next();
-  }
-}
+// Création du router d'API
+var api = createApiRouter()
+app.use('/api', api)
 
-app.use(conditionalCSRF);
+app.use(csurf());
 
 // error handler
 app.use(function (err, req, res, next) {
@@ -131,23 +127,6 @@ app.post("/authenticate", csrfProtection, (req, res) => {
     res.redirect("/login")
   }
 })
-
-/*app.get("/admin", (req, res) => {
-  template = fs.readFileSync(path.join(__dirname, "/web/admin.mustache"), "utf8")
-
-
-
-  var render_object = {
-    nb_gen_video: 
-    nb_save_video:
-    nb_waiting_video:
-    nb_rss_feed: 
-    size_export_folder:
-  }
-
-  res.setHeader("content-type", "text/html");
-  res.send(mustache.render(template, render_object))
-})*/
 
 app.get("/preview", csrfProtection, (req, res) => {
   if (process.env.GEN_PWD == "") {
@@ -548,103 +527,115 @@ app.post("/addvideopreview", csrfProtection, (req, res) => {
 
 })
 
-app.post("/api/video", (req, res) => {
-  if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
-    if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
-      
-      bdd.Video.create({
-        email: req.body.email,
-        rss: "__custom__",
-        template: req.body.template,
-        access_token: randtoken.generate(32),
-        epTitle: req.body.epTitle,
-        epImg: req.body.imgURL,
-        podTitle: req.body.podTitle,
-        podSub: req.body.podSub,
-        audioURL: req.body.audioURL
-      }).then((video) => {
-        initNewGeneration();
-        res.status(200).json({id: video.id, token: video.access_token});
-      }).catch((err) => {
-        console.error(err);
-        res.status(500);
-      })
-    } else {
-      res.status(400).send("Votre requète n'est pas complète...")
-    }
-  } else {
-    res.status(401).send("Vous n'avez pas le bon mot de passe d'API")
-  }
-})
+function createApiRouter () {
+  var router = new express.Router()
 
-app.get("/api/video/:id", (req, res) => {
-  if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
-    if (req.query.token != undefined) {
-      bdd.Video.findByPk(req.params.id).then((video) => {
-        if (video != null) {
-          if (req.query.token == video.access_token) {
-            returnObj = {
-              id: video.id, 
-              status: video.status, 
-              download_url: process.env.HOST + "/download/" + video.id + "?token=" + video.access_token
-            }
-  
-            if (video.status == "finished") {
-              returnObj.delete_timestamp = parseInt(video.end_timestamp) + (process.env.KEEPING_TIME * 60 * 60 * 1000) 
-            }
-            res.status(200).json(returnObj);
-          } else {
-            res.status(401).send("Le token n'est pas juste")
-          }
+  router.post("/api/video", (req, res) => {
+    if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
+      if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
+        if (req.body.font == undefined) {
+          font = "Montserrat"
         } else {
-          res.status(404).send("Il n'y a pas de vidéo " + req.params.id)
+          font = req.body.fond
         }
-
-      })
+  
+        bdd.Video.create({
+          email: req.body.email,
+          rss: "__custom__",
+          template: req.body.template,
+          access_token: randtoken.generate(32),
+          epTitle: req.body.epTitle,
+          epImg: req.body.imgURL,
+          podTitle: req.body.podTitle,
+          podSub: req.body.podSub,
+          audioURL: req.body.audioURL,
+          font: font
+        }).then((video) => {
+          initNewGeneration();
+          res.status(200).json({id: video.id, token: video.access_token});
+        }).catch((err) => {
+          console.error(err);
+          res.status(500);
+        })
+      } else {
+        res.status(400).send("Votre requète n'est pas complète...")
+      }
     } else {
-      res.status(401).send("Vous devez préciser un token d'accès pour la vidéo")
+      res.status(401).send("Vous n'avez pas le bon mot de passe d'API")
     }
-  } else {
-    res.status(401).send("Vous n'avez pas le bon mot de passe d'API")
-  }  
-})
-
-app.get("/api/feed", (req, res) => {
-  checkIfRss(req.query.url, (is_feed) => {
-    if (is_feed) {
-      parser.parseURL(req.query.url, (err, feed) => {
+  })
+  
+  router.get("/api/video/:id", (req, res) => {
+    if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
+      if (req.query.token != undefined) {
+        bdd.Video.findByPk(req.params.id).then((video) => {
+          if (video != null) {
+            if (req.query.token == video.access_token) {
+              returnObj = {
+                id: video.id, 
+                status: video.status, 
+                download_url: process.env.HOST + "/download/" + video.id + "?token=" + video.access_token
+              }
+    
+              if (video.status == "finished") {
+                returnObj.delete_timestamp = parseInt(video.end_timestamp) + (process.env.KEEPING_TIME * 60 * 60 * 1000) 
+              }
+              res.status(200).json(returnObj);
+            } else {
+              res.status(401).send("Le token n'est pas juste")
+            }
+          } else {
+            res.status(404).send("Il n'y a pas de vidéo " + req.params.id)
+          }
+  
+        })
+      } else {
+        res.status(401).send("Vous devez préciser un token d'accès pour la vidéo")
+      }
+    } else {
+      res.status(401).send("Vous n'avez pas le bon mot de passe d'API")
+    }  
+  })
+  
+  router.get("/api/feed", (req, res) => {
+    checkIfRss(req.query.url, (is_feed) => {
+      if (is_feed) {
+        parser.parseURL(req.query.url, (err, feed) => {
+          resObj = {
+            data: [],
+            message: "Flux " + req.query.url + " trouvé"
+          }
+      
+          feed.items.forEach((i) => {
+            o = {
+              title: i.title,
+              guid: i.guid.replace("<![CDATA[", "").replace("]]>", "")
+            }
+      
+            resObj.data.push(o)
+          })
+      
+          res.header("Access-Control-Allow-Origin", process.env.HOST);
+          res.header("Access-Control-Allow-Methods", "GET");
+          res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
+          res.status(200).json(resObj);
+        })
+      } else {
         resObj = {
           data: [],
-          message: "Flux " + req.query.url + " trouvé"
+          message: "Le flux n'est pas un flux RSS valide"
         }
-    
-        feed.items.forEach((i) => {
-          o = {
-            title: i.title,
-            guid: i.guid.replace("<![CDATA[", "").replace("]]>", "")
-          }
-    
-          resObj.data.push(o)
-        })
-    
         res.header("Access-Control-Allow-Origin", process.env.HOST);
         res.header("Access-Control-Allow-Methods", "GET");
         res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
-        res.status(200).json(resObj);
-      })
-    } else {
-      resObj = {
-        data: [],
-        message: "Le flux n'est pas un flux RSS valide"
+        res.status(400).json(resObj);
       }
-      res.header("Access-Control-Allow-Origin", process.env.HOST);
-      res.header("Access-Control-Allow-Methods", "GET");
-      res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
-      res.status(400).json(resObj);
-    }
-
+  
+    })
   })
-})
+
+  return router
+}
 
 // FONCTION DE GENERATIONS
 function restartGeneration() {
@@ -717,7 +708,7 @@ function initNewGeneration() {
         if(video != null) {
           video.status = 'during'
           video.save().then((video) => {
-            if (rows[0].rss != "__custom__") {
+            if (video.rss != "__custom__") {
               generateFeed(video.rss, video.guid, video.template, video.id, video.font)
             } else {
               generateImgCustom(video.id);

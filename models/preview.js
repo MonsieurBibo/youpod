@@ -54,7 +54,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: "waiting",
       allowNull: false,
       validate: {
-        isIn: ["waiting","during","finished","deleted","error"]
+        isIn: [["waiting","during","finished","deleted","error"]]
       }
     },
     createdAt: {

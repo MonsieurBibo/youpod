@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: "waiting",
       validate: {
-        isIn: ["waiting","during","finished","deleted","error"]
+        isIn: [["waiting","during","finished","deleted","error"]]
       }
     },
     font: {
@@ -44,7 +44,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     epImg: {
       type: DataTypes.STRING,
-      allowNull: false,
       validate: {
         isUrl: true
       }

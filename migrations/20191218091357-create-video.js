@@ -45,7 +45,6 @@ module.exports = {
       },
       epImg: {
         type: Sequelize.STRING,
-        allowNull: false,
         validate: {
           isUrl: true
         }
