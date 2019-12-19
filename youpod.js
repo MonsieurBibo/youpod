@@ -43,7 +43,16 @@ app.use(session({
   cookie: { secure: false }
 }))
 
-app.use(csurf())
+var conditionalCSRF = function (req, res, next) {
+  if (!req.path.includes("api")) {
+    csrf(req, res, next);
+  } else {
+    next();
+  }
+}
+
+app.use(conditionalCSRF);
+
 // error handler
 app.use(function (err, req, res, next) {
   if (err.code !== 'EBADCSRFTOKEN') return next(err)
@@ -543,18 +552,23 @@ app.post("/api/video", (req, res) => {
   if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
     if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
       
-      db.run(`INSERT INTO video(email, rss, template, access_token, epTitle, epImg, podTitle, podSub, audioURL) VALUES ("${req.body.email}", "__custom__", ?, "${randtoken.generate(32)}", ?, ?, ?, ?, ?)`, [req.body.template, req.body.epTitle, req.body.imgURL, req.body.podTitle, req.body.podSub, req.body.audioURL], function(err) {
-        if(err) {
-            console.error(err);
-            res.status(500);
-            return;
-        }
-  
-        db.each(`SELECT * FROM video WHERE id='${this.lastID}'`, (err, row) => {
-          initNewGeneration();
-          res.status(200).json({id: row.id, token: row.access_token});
-        })
-      });
+      bdd.Video.create({
+        email: req.body.email,
+        rss: "__custom__",
+        template: req.body.template,
+        access_token: randtoken.generate(32),
+        epTitle: req.body.epTitle,
+        epImg: req.body.imgURL,
+        podTitle: req.body.podTitle,
+        podSub: req.body.podSub,
+        audioURL: req.body.audioURL
+      }).then((video) => {
+        initNewGeneration();
+        res.status(200).json({id: video.id, token: video.access_token});
+      }).catch((err) => {
+        console.error(err);
+        res.status(500);
+      })
     } else {
       res.status(400).send("Votre requète n'est pas complète...")
     }
@@ -566,17 +580,17 @@ app.post("/api/video", (req, res) => {
 app.get("/api/video/:id", (req, res) => {
   if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
     if (req.query.token != undefined) {
-      db.all(`SELECT * FROM video WHERE id='${req.params.id}'`, (err, rows) => {
-        if (rows.length > 0) {
-          if (req.query.token == rows[0].access_token) {
+      bdd.Video.findByPk(req.params.id).then((video) => {
+        if (video != null) {
+          if (req.query.token == video.access_token) {
             returnObj = {
-              id: rows[0].id, 
-              status: rows[0].status, 
-              download_url: process.env.HOST + "/download/" + rows[0].id + "?token=" + rows[0].access_token
+              id: video.id, 
+              status: video.status, 
+              download_url: process.env.HOST + "/download/" + video.id + "?token=" + video.access_token
             }
-
-            if (rows[0].status == "finished") {
-              returnObj.delete_timestamp = parseInt(rows[0].end_timestamp) + (process.env.KEEPING_TIME * 60 * 60 * 1000) 
+  
+            if (video.status == "finished") {
+              returnObj.delete_timestamp = parseInt(video.end_timestamp) + (process.env.KEEPING_TIME * 60 * 60 * 1000) 
             }
             res.status(200).json(returnObj);
           } else {
@@ -585,7 +599,8 @@ app.get("/api/video/:id", (req, res) => {
         } else {
           res.status(404).send("Il n'y a pas de vidéo " + req.params.id)
         }
-      })      
+
+      })
     } else {
       res.status(401).send("Vous devez préciser un token d'accès pour la vidéo")
     }
@@ -634,16 +649,20 @@ app.get("/api/feed", (req, res) => {
 // FONCTION DE GENERATIONS
 function restartGeneration() {
   console.log("Reprise de générations...")
-  db.each(`SELECT * FROM video WHERE status='during'`, (err, row) => {
-    if (row.rss != "__custom__") {
-      generateFeed(row.rss, row.guid, row.template, row.id, row.font)
-    } else {
-      generateImgCustom(row.id);
-    }
+  bdd.Video.findAll({where: {status: "during"}}).then((videos) => {
+    videos.forEach((v) => {
+      if (v.rss != "__custom__") {
+        generateFeed(v.rss, v.guid, v.template, v.id, v.font)
+      } else {
+        generateImgCustom(v.id);
+      }
+    })
   })
 
-  db.each(`SELECT * FROM preview WHERE status='during'`, (err, row) => {
-      generateImgPreview(row.id);
+  bdd.Preview.findAll({where: {status: "during"}}).then((previews) => {
+    previews.forEach((p) => {
+      generateImgPreview(p.id);
+    })
   })
 
   initNewGeneration();

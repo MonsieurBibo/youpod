@@ -64,8 +64,9 @@ module.exports = {
         validate: {
           isUrl: true
         }
-      }
-
+      },
+      updatedAt: DataTypes.DATE,
+      createdAt: DataTypes.DATE
     });
   },
   down: (queryInterface, Sequelize) => {
