@@ -1048,21 +1048,6 @@ function sendMail(id, ep_title) {
   })
 }
 
-function generateLoop(duration) {
-  string = "";
-
-  for(i = 0; i < duration * 3; i++) {
-    string = string + "file 'loop.mp4'\n"
-  }
-
-  fs.writeFileSync(path.join(__dirname, "assets/list.txt"), string);
-  exec(`ffmpeg -y -f concat -i ./assets/list.txt ./loop/loop_${duration}.mp4`, {cmd: __dirname}, (err, stdout, stderr) => {
-    console.log(err)
-    console.log(stdout)
-    console.log(stderr)
-  })
-}
-
 function pathEvalute(arg_path) {
 	if (path.isAbsolute(arg_path)) {
 		return arg_path
