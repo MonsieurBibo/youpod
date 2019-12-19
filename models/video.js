@@ -2,23 +2,71 @@
 module.exports = (sequelize, DataTypes) => {
   const Video = sequelize.define('Video', {
     id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER
     },
-    email: DataTypes.STRING,
-    rss: DataTypes.STRING,
-    guid: DataTypes.STRING,
-    template: DataTypes.TEXT,
-    access_token: DataTypes.STRING,
-    end_timestamp: DataTypes.INTEGER,
-    status: DataTypes.STRING,
-    font: DataTypes.STRING,
-    epTitle: DataTypes.STRING,
-    epImg: DataTypes.STRING,
-    podTitle: DataTypes.STRING,
-    podSub: DataTypes.STRING,
-    audioURL: DataTypes.STRING
-  }, {});
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isEmail: true
+      }
+    },
+    rss: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    guid: {
+      type: DataTypes.STRING
+    },
+    template: {
+      type: DataTypes.TEXT
+    },
+    access_token: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    end_timestamp: {
+      type: DataTypes.INTEGER
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "waiting",
+      validate: {
+        isIn: ["waiting","during","finished","deleted","error"]
+      }
+    },
+    font: {
+      type: DataTypes.STRING
+    },
+    epImg: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isUrl: true
+      }
+    },
+    epTitle: {
+      type: DataTypes.STRING
+    },
+    podTitle: {
+      type: DataTypes.STRING
+    },
+    podSub : {
+      type: DataTypes.STRING
+    },
+    audioURL: {
+      type: DataTypes.STRING,
+      validate: {
+        isUrl: true
+      }
+    }
+  }, {
+
+  });
   Video.associate = function(models) {
     // associations can be defined here
   };

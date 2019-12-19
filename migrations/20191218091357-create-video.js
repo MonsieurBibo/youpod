@@ -17,10 +17,7 @@ module.exports = {
       },
       rss: {
         type: Sequelize.STRING,
-        allowNull: false,
-        validate: {
-          isUrl: true
-        }
+        allowNull: false
       },
       guid: {
         type: Sequelize.STRING
@@ -45,6 +42,13 @@ module.exports = {
       },
       font: {
         type: Sequelize.STRING
+      },
+      epImg: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        validate: {
+          isUrl: true
+        }
       },
       epTitle: {
         type: Sequelize.STRING

@@ -13,6 +13,9 @@ const puppeteer = require('puppeteer');
 const session = require('express-session');
 const csurf = require('csurf')
 const getMP3Duration = require('get-mp3-duration')
+const bdd = require(__dirname + "/models/index.js")
+const Op = bdd.Sequelize.Op;
+
 require('dotenv').config()
 
 var transporter = nodemailer.createTransport({
@@ -49,7 +52,6 @@ app.use(function (err, req, res, next) {
   res.status(403)
   res.send("Bad CSRF")
 })
-
 
 //Connexion à la base de donnée
 sq.verbose();
@@ -140,11 +142,15 @@ app.post("/authenticate", csrfProtection, (req, res) => {
 
 app.get("/preview", csrfProtection, (req, res) => {
   if (process.env.GEN_PWD == "") {
-    db.all(`SELECT count(*) FROM preview WHERE status='waiting' OR status='during'`, (err, rows) => {
+    bdd.Preview.count({
+      where: {
+        [Op.or]: [{status: "waiting"}, {status: "during"}]
+      }
+    }).then((nb) => {
       template = fs.readFileSync(path.join(__dirname, "/web/preview.mustache"), "utf8")
 
       var render_object = {
-        "waiting_list": rows[0]["count(*)"],
+        "waiting_list": nb,
         "keeping_time": process.env.KEEPING_TIME,
         "csrfToken": req.csrfToken
       }
@@ -152,13 +158,18 @@ app.get("/preview", csrfProtection, (req, res) => {
       res.setHeader("content-type", "text/html");
       res.send(mustache.render(template, render_object))
     })
+
   } else {
     if (req.session.logged != undefined) {
-      db.all(`SELECT count(*) FROM preview WHERE status='waiting' OR status='during'`, (err, rows) => {
+      bdd.Preview.count({
+        where: {
+          [Op.or]: [{status: "waiting"}, {status: "during"}]
+        }
+      }).then((nb) => {
         template = fs.readFileSync(path.join(__dirname, "/web/preview.mustache"), "utf8")
   
         var render_object = {
-          "waiting_list": rows[0]["count(*)"],
+          "waiting_list": nb,
           "keeping_time": process.env.KEEPING_TIME,
           "csrfToken": req.csrfToken
         }
@@ -174,11 +185,15 @@ app.get("/preview", csrfProtection, (req, res) => {
 
 app.get("/custom", csrfProtection, (req, res) => {
   if (process.env.GEN_PWD == "") {
-    db.all(`SELECT count(*) FROM video WHERE status='waiting' OR status='during'`, (err, rows) => {
+    bdd.Video.count({
+      where: {
+        [Op.or]: [{status: "waiting"}, {status: "during"}]
+      }
+    }).then((nb) => {
       template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
 
       var render_object = {
-        "waiting_list": rows[0]["count(*)"],
+        "waiting_list": nb,
         "keeping_time": process.env.KEEPING_TIME,
         "csrfToken": req.csrfToken
       }
@@ -188,11 +203,15 @@ app.get("/custom", csrfProtection, (req, res) => {
     })
   } else {
     if (req.session.logged != undefined) {
-      db.all(`SELECT count(*) FROM video WHERE status='waiting' OR status='during'`, (err, rows) => {
+      bdd.Video.count({
+        where: {
+          [Op.or]: [{status: "waiting"}, {status: "during"}]
+        }
+      }).then((nb) => {
         template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
   
         var render_object = {
-          "waiting_list": rows[0]["count(*)"],
+          "waiting_list": nb,
           "keeping_time": process.env.KEEPING_TIME,
           "need_pass": process.env.GEN_PWD!="",
           "csrfToken": req.csrfToken
@@ -209,11 +228,15 @@ app.get("/custom", csrfProtection, (req, res) => {
 
 app.get("/", csrfProtection, (req, res) => {
   if (process.env.GEN_PWD == "") {
-    db.all(`SELECT count(*) FROM video WHERE status='waiting' OR status='during'`, (err, rows) => {
+    bdd.Video.count({
+      where: {
+        [Op.or]: [{status: "waiting"}, {status: "during"}]
+      }
+    }).then((nb) => {
       template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
   
       var render_object = {
-        "waiting_list": rows[0]["count(*)"],
+        "waiting_list": nb,
         "keeping_time": process.env.KEEPING_TIME,
         "need_pass": process.env.GEN_PWD!="",
         "csrfToken": req.csrfToken
@@ -224,11 +247,15 @@ app.get("/", csrfProtection, (req, res) => {
     })
   } else {
     if (req.session.logged != undefined) {
-      db.all(`SELECT count(*) FROM video WHERE status='waiting' OR status='during'`, (err, rows) => {
+      bdd.Video.count({
+        where: {
+          [Op.or]: [{status: "waiting"}, {status: "during"}]
+        }
+      }).then((nb) => {
         template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
     
         var render_object = {
-          "waiting_list": rows[0]["count(*)"],
+          "waiting_list": nb,
           "keeping_time": process.env.KEEPING_TIME,
           "need_pass": process.env.GEN_PWD!="",
           "csrfToken": req.csrfToken
@@ -246,24 +273,22 @@ app.get("/", csrfProtection, (req, res) => {
 
 app.get("/download/preview/:id", (req, res) => {
   if (req.query.token != undefined) {
-    db.all(`SELECT * FROM preview WHERE id='${req.params.id}'`, (err, rows) => {
-      if (rows.length >= 1) {
-        if (req.query.token != rows[0].access_token) {
-          res.status(403).send("Vous n'avez pas accès à cette preview")
-        } else {
-          if (rows[0].status == 'finished') {
-            res.download(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${rows[0].id}.mp4`), `youpod_preview_${rows[0].end_timestamp}.mp4`)
-          } else if (rows[0].status == 'deleted') {
-            res.status(404).send("Cette vidéo à été supprimée du site!")
-          } else if (rows[0].status == 'during') {
-            res.status(404).send("Cette vidéo est encore en cours de traitement, revenez plus tard!")
-          } else {
-            res.status(404).send("Cette vidéo est encore dans la file d'attente.")
-          }
-        }
+    bdd.Preview.findByPk(req.params.id).then((preview) => {
+      if (req.query.token != preview.access_token) {
+        res.status(403).send("Vous n'avez pas accès à cette preview")
       } else {
-        res.status(404).send("Cette vidéo n'est pas disponible...")
+        if (preview.status == 'finished') {
+          res.download(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${vpreviewideo.id}.mp4`), `youpod_preview_${preview.end_timestamp}.mp4`)
+        } else if (preview.status == 'deleted') {
+          res.status(404).send("Cette vidéo à été supprimée du site!")
+        } else if (preview.status == 'during') {
+          res.status(404).send("Cette vidéo est encore en cours de traitement, revenez plus tard!")
+        } else {
+          res.status(404).send("Cette vidéo est encore dans la file d'attente.")
+        }
       }
+    }).catch((err) => {
+      res.status(404).send("Cette vidéo n'est pas disponible...")
     })
   } else {
     res.status(404).send("Vous n'avez pas mis de token d'accès à une vidéo")
@@ -273,24 +298,22 @@ app.get("/download/preview/:id", (req, res) => {
 
 app.get("/download/:id", (req, res) => {
   if (req.query.token != undefined) {
-    db.all(`SELECT * FROM video WHERE id='${req.params.id}'`, (err, rows) => {
-      if (rows.length >= 1) {
-        if (req.query.token != rows[0].access_token) {
-          res.status(403).send("Vous n'avez pas accès à cette vidéo")
-        } else {
-          if (rows[0].status == 'finished') {
-            res.download(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${rows[0].id}.mp4`), `youpod_${rows[0].end_timestamp}.mp4`)
-          } else if (rows[0].status == 'deleted') {
-            res.status(404).send("Cette vidéo à été supprimée du site!")
-          } else if (rows[0].status == 'during') {
-            res.status(404).send("Cette vidéo est encore en cours de traitement, revenez plus tard!")
-          } else {
-            res.status(404).send("Cette vidéo est encore dans la file d'attente.")
-          }
-        }
+    bdd.Video.findByPk(req.params.id).then((video) => {
+      if (req.query.token != video.access_token) {
+        res.status(403).send("Vous n'avez pas accès à cette vidéo")
       } else {
-        res.status(404).send("Cette vidéo n'est pas disponible...")
+        if (video.status == 'finished') {
+          res.download(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${video.id}.mp4`), `youpod_${video.end_timestamp}.mp4`)
+        } else if (video.status == 'deleted') {
+          res.status(404).send("Cette vidéo à été supprimée du site!")
+        } else if (video.status == 'during') {
+          res.status(404).send("Cette vidéo est encore en cours de traitement, revenez plus tard!")
+        } else {
+          res.status(404).send("Cette vidéo est encore dans la file d'attente.")
+        }
       }
+    }).catch((err) => {
+      res.status(404).send("Cette vidéo n'est pas disponible...")
     })
   } else {
     res.status(404).send("Vous n'avez pas mis de token d'accès à une vidéo")
@@ -305,14 +328,30 @@ app.post("/addvideo", csrfProtection, (req, res) => {
         if (is_rss) {
           if (req.body.selectEp == undefined) {
             getLastGuid(req.body.rss, (guid)=> {
-              db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${guid}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
+              bdd.Video.create({
+                email: req.body.email,
+                rss: req.body.rss,
+                guid: guid,
+                template: req.body.template,
+                access_token: randtoken.generate(32),
+                fond:req.body["font-choice"]
+              }).then((video) => {
+                initNewGeneration();
+                res.sendFile(path.join(__dirname, "/web/done.html"))
+              })
+            })
+          } else {
+            bdd.Video.create({
+              email: req.body.email,
+              rss: req.body.rss,
+              guid: req.body.selectEp,
+              template: req.body.template,
+              access_token: randtoken.generate(32),
+              fond:req.body["font-choice"]
+            }).then((video) => {
               initNewGeneration();
               res.sendFile(path.join(__dirname, "/web/done.html"))
             })
-          } else {
-            db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${req.body.selectEp}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
-            initNewGeneration();
-            res.sendFile(path.join(__dirname, "/web/done.html"))
           }
         } else {
           template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
@@ -335,14 +374,30 @@ app.post("/addvideo", csrfProtection, (req, res) => {
           if (is_rss) {
             if (req.body.selectEp == undefined) {
               getLastGuid(req.body.rss, (guid)=> {
-                db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${guid}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
+                bdd.Video.create({
+                  email: req.body.email,
+                  rss: req.body.rss,
+                  guid: guid,
+                  template: req.body.template,
+                  access_token: randtoken.generate(32),
+                  fond:req.body["font-choice"]
+                }).then((video) => {
+                  initNewGeneration();
+                  res.sendFile(path.join(__dirname, "/web/done.html"))
+                })
+              })
+            } else {
+              bdd.Video.create({
+                email: req.body.email,
+                rss: req.body.rss,
+                guid: req.body.selectEp,
+                template: req.body.template,
+                access_token: randtoken.generate(32),
+                fond:req.body["font-choice"]
+              }).then((video) => {
                 initNewGeneration();
                 res.sendFile(path.join(__dirname, "/web/done.html"))
               })
-            } else {
-              db.run(`INSERT INTO video(email, rss, guid, template, access_token, font) VALUES ("${req.body.email}", "${req.body.rss}", "${req.body.selectEp}", ?, "${randtoken.generate(32)}", ?)`, req.body.template, req.body["font-choice"])
-              initNewGeneration();
-              res.sendFile(path.join(__dirname, "/web/done.html"))
             }
           } else {
             template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
@@ -380,20 +435,42 @@ function checkIfRss(feed_url, __callback) {
 app.post("/addvideocustom", csrfProtection, (req, res) => {
   if (process.env.GEN_PWD == "") {
     if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
-        db.run(`INSERT INTO video(email, rss, template, access_token, epTitle, epImg, podTitle, podSub, audioURL, font) VALUES ("${req.body.email}", "__custom__", ?, "${randtoken.generate(32)}", ?, ?, ?, ?, ?, ?)`, [req.body.template, req.body.epTitle, req.body.imgURL, req.body.podTitle, req.body.podSub, req.body.audioURL, req.body["font-choice"]])    
-      
+      bdd.Video.create({
+        email: req.body.email,
+        rss: "__custom__",
+        template: req.body.template,
+        access_token: randtoken.generate(32),
+        epTitle: req.body.epTitle,
+        epImg: req.body.imgURL,
+        podTitle: req.body.podTitle,
+        podSub: req.body.podSub,
+        audioURL: req.body.audioURL,
+        font: req.body["font-choice"]
+      }).then((video) => {
         initNewGeneration();
         res.sendFile(path.join(__dirname, "/web/done.html"))  
+      })
     } else {
       res.status(400).send("Votre requète n'est pas complète...")
     }
   } else {
     if (req.session.logged != undefined) {
-      if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
-        db.run(`INSERT INTO video(email, rss, template, access_token, epTitle, epImg, podTitle, podSub, audioURL, font) VALUES ("${req.body.email}", "__custom__", ?, "${randtoken.generate(32)}", ?, ?, ?, ?, ?, ?)`, [req.body.template, req.body.epTitle, req.body.imgURL, req.body.podTitle, req.body.podSub, req.body.audioURL, req.body["font-choice"]])    
-      
-        initNewGeneration();
-        res.sendFile(path.join(__dirname, "/web/done.html"))  
+      if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {  
+        bdd.Video.create({
+          email: req.body.email,
+          rss: "__custom__",
+          template: req.body.template,
+          access_token: randtoken.generate(32),
+          epTitle: req.body.epTitle,
+          epImg: req.body.imgURL,
+          podTitle: req.body.podTitle,
+          podSub: req.body.podSub,
+          audioURL: req.body.audioURL,
+          font: req.body["font-choice"]
+        }).then((video) => {
+          initNewGeneration();
+          res.sendFile(path.join(__dirname, "/web/done.html"))  
+        })
       } else {
         res.status(400).send("Votre requète n'est pas complète...")
       }
@@ -413,10 +490,19 @@ app.post("/addvideopreview", csrfProtection, (req, res) => {
         color = req.body.color
       }
 
-      db.run(`INSERT INTO preview(email, access_token, epTitle, podTitle, imgLink, audioLink, startTime, color) VALUES ("${req.body.email}", "${randtoken.generate(32)}", ?, ?, ?, ?, ?, ?)`, [req.body.epTitle, req.body.podTitle, req.body.imgURL, req.body.audioURL, req.body.timestart, color])    
-      
-      initNewGeneration();
-      res.sendFile(path.join(__dirname, "/web/done.html"))
+      bdd.Preview.create({
+        email: req.body.email,
+        access_token: randtoken.generate(32),
+        epTitle: req.body.epTitle,
+        podTitle: req.body.podTitle,
+        imgLink: req.body.imgURL,
+        audioLink: req.body.audioURL,
+        startTime: req.body.timestart,
+        color: color
+      }).then((preview) => {
+        initNewGeneration();
+        res.sendFile(path.join(__dirname, "/web/done.html"))
+      })
     } else {
       res.status(400).send("Votre requète n'est pas complète...")
     }
@@ -429,10 +515,19 @@ app.post("/addvideopreview", csrfProtection, (req, res) => {
           color = req.body.color
         }
         
-        db.run(`INSERT INTO preview(email, access_token, epTitle, podTitle, imgLink, audioLink, startTime, color) VALUES ("${req.body.email}", "${randtoken.generate(32)}", ?, ?, ?, ?, ?, ?)`, [req.body.epTitle, req.body.podTitle, req.body.imgURL, req.body.audioURL, req.body.timestart, color])    
-        
-        initNewGeneration();
-        res.sendFile(path.join(__dirname, "/web/done.html"))
+        bdd.Preview.create({
+          email: req.body.email,
+          access_token: randtoken.generate(32),
+          epTitle: req.body.epTitle,
+          podTitle: req.body.podTitle,
+          imgLink: req.body.imgURL,
+          audioLink: req.body.audioURL,
+          startTime: req.body.timestart,
+          color: color
+        }).then((preview) => {
+          initNewGeneration();
+          res.sendFile(path.join(__dirname, "/web/done.html"))
+        })
       } else {
         res.status(400).send("Votre requète n'est pas complète...")
       }
