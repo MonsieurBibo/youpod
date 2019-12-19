@@ -37,6 +37,11 @@ module.exports = {
           isIn: ["waiting","during","finished","deleted","error"]
         }
       },
+      priority: {
+        type: DataTypes.INTEGER,
+        allowNull:false,
+        defaultValue: 0
+      },
       font: {
         type: Sequelize.STRING
       },

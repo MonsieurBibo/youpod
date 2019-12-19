@@ -53,7 +53,12 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isIn: [["waiting","during","finished","deleted","error"]]
       }
-    }
+    },
+    priority: {
+      type: DataTypes.INTEGER,
+      allowNull:false,
+      defaultValue: 0
+    },
   }, {
 
   });
