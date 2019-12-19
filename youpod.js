@@ -711,27 +711,31 @@ function flush() {
 }
 
 function initNewGeneration() {
-  db.all(`SELECT count(*) FROM video WHERE status='during'`, (err, rows) => {
-    if (rows[0]["count(*)"] < process.env.MAX_DURING) {
-      db.all(`SELECT * FROM video WHERE status='waiting'`, (err, rows) => {
-        if(rows.length >= 1) {
-          db.run(`UPDATE video SET status='during' WHERE id=${rows[0].id}`);
-          if (rows[0].rss != "__custom__") {
-            generateFeed(rows[0].rss, rows[0].guid, rows[0].template, rows[0].id, rows[0].font)
-          } else {
-            generateImgCustom(rows[0].id);
-          }
+  bdd.Video.count({where: {status: "during"}}).then((nb) => {
+    if (nb < process.env.MAX_DURING) {
+      bdd.Video.findOne({where: {status: "waiting"}}).then((video) => {
+        if(video != null) {
+          video.status = 'during'
+          video.save().then((video) => {
+            if (rows[0].rss != "__custom__") {
+              generateFeed(video.rss, video.guid, video.template, video.id, video.font)
+            } else {
+              generateImgCustom(video.id);
+            }
+          })
         }
       })
     }
   })
 
-  db.all(`SELECT count(*) FROM preview WHERE status='during'`, (err, rows) => {
-    if (rows[0]["count(*)"] < process.env.MAX_DURING_PREVIEW) {
-      db.all(`SELECT * FROM preview WHERE status='waiting'`, (err, rows) => {
-        if(rows.length >= 1) {
-          db.run(`UPDATE preview SET status='during' WHERE id=${rows[0].id}`);
-          generateImgPreview(rows[0].id);
+  bdd.Preview.count({where: {status: "during"}}).then((nb) => {
+    if (nb < process.env.MAX_DURING_PREVIEW) {
+      bdd.Preview.findOne({where: {status: "waiting"}}).then((preview) => {
+        if (preview != null) {
+          preview.status = "during"
+          preview.save().then((preview) => {
+            generateImgPreview(preview.id);
+          })
         }
       })
     }
