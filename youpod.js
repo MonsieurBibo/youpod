@@ -13,6 +13,7 @@ const session = require('express-session');
 const csurf = require('csurf')
 const getMP3Duration = require('get-mp3-duration')
 const bdd = require(__dirname + "/models/index.js")
+const getSize = require('get-folder-size');
 const Op = bdd.Sequelize.Op;
 
 require('dotenv').config()
@@ -93,6 +94,43 @@ app.get("/login", csrfProtection, (req, res) => {
 
   res.setHeader("content-type", "text/html");
   res.send(mustache.render(template, render_object))
+})
+
+app.get("/admin", (req, res) => {
+  template = fs.readFileSync(path.join(__dirname, "/web/admin.mustache"), "utf8")
+
+  bdd.Video.count({where: {
+    [Op.or]: [{status: "finished"}, {status: "deleted"}]
+  }}).then((nb_gen_video) => {
+    bdd.Video.count({where: {
+      status: "finished"
+    }}).then((nb_save_video) => {
+      bdd.Video.count({where: {
+        [Op.or]: [{status: "waiting"}, {status: "during"}]
+      }}).then((nb_waiting_video) => {
+        bdd.sequelize.query(`SELECT DISTINCT rss FROM Videos`, { raw: true }).then(function(rows){
+          nb_rss_feed = rows[0].length
+
+          getSize(pathEvalute(process.env.EXPORT_FOLDER), (err, size) => {
+            if (err) { throw err; }
+           
+            size_export_folder = (size / 1024 / 1024).toFixed(2) + ' MB';
+
+            var render_object = {
+              nb_gen_video: nb_gen_video,
+              nb_save_video: nb_save_video,
+              nb_waiting_video: nb_waiting_video,
+              nb_rss_feed: nb_rss_feed,
+              size_export_folder: size_export_folder
+            }
+          
+            res.setHeader("content-type", "text/html");
+            res.send(mustache.render(template, render_object))
+          });
+      })
+      })
+    })
+  })
 })
 
 app.post("/authenticate", csrfProtection, (req, res) => {
@@ -702,7 +740,7 @@ function flush() {
 function initNewGeneration() {
   bdd.Video.count({where: {status: "during"}}).then((nb) => {
     if (nb < process.env.MAX_DURING) {
-      bdd.Video.findOne({where: {status: "waiting"}}).then((video) => {
+      bdd.Video.findOne({where: {status: "waiting"}, order: ["priority", "id"]}).then((video) => {
         if(video != null) {
           video.status = 'during'
           video.save().then((video) => {
@@ -719,7 +757,7 @@ function initNewGeneration() {
 
   bdd.Preview.count({where: {status: "during"}}).then((nb) => {
     if (nb < process.env.MAX_DURING_PREVIEW) {
-      bdd.Preview.findOne({where: {status: "waiting"}}).then((preview) => {
+      bdd.Preview.findOne({where: {status: "waiting"}, order: ["priority", "id"]}).then((preview) => {
         if (preview != null) {
           preview.status = "during"
           preview.save().then((preview) => {
