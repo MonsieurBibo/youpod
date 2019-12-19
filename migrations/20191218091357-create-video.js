@@ -34,7 +34,7 @@ module.exports = {
         allowNull: false,
         defaultValue: "waiting",
         validate: {
-          isIn: ["waiting","during","finished","deleted","error"]
+          isIn: ["waiting","during","finished","deleted","error", "canceled"]
         }
       },
       priority: {

@@ -32,9 +32,6 @@ app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
 })); 
-
-var csrfProtection = csurf()
-
 //Configuration du cookie de session
 app.use(session({
   secret: process.env.COOKIE_SECRET,
@@ -43,11 +40,7 @@ app.use(session({
   cookie: { secure: false }
 }))
 
-// Création du router d'API
-var api = createApiRouter()
-app.use('/api', api)
-
-app.use(csurf());
+var csrfProtection = csurf()
 
 // error handler
 app.use(function (err, req, res, next) {
@@ -94,6 +87,66 @@ app.get("/login", csrfProtection, (req, res) => {
 
   res.setHeader("content-type", "text/html");
   res.send(mustache.render(template, render_object))
+})
+
+app.post("/admin/action", (req, res) => {
+  if (req.body.action == "flush_video") {
+    bdd.Video.findAll({where: {status: "finished"}}).then((videos) => {
+      videos.forEach((v) => {
+        try {
+          fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${v.id}.mp4`))
+        } catch (err) {
+          console.log(`Fichier output_${v.id}.mp4 déjà supprimé`)
+        }
+        v.status = "deleted"
+        v.save()
+        console.log("Flush video " + v.id)
+      })
+
+      res.status(200).send("Vidéos supprimées!")
+    })
+  } else if (req.body.action == "flush_list") {
+    bdd.Video.update({ status: "canceled", email: "canceled" }, {
+      where: {
+        status: "waiting"
+      }
+    }).then(() => {
+      res.status(200).send("Liste d'attente effacée!")
+    })
+  }
+})
+
+app.post("/admin/prio/:id", (req, res) => {
+  bdd.Video.update({priority: req.body.priority}, {
+    where: {
+      id: req.params.id
+    }
+  }).then(() => {
+    res.redirect("/admin")
+  })
+})
+
+app.get("/admin/queue", (req, res) => {
+  bdd.Video.findAll({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((videos) => {
+    returnObj = {queue: []}
+
+    for (i = 0; i < videos.length; i++) {
+      o = {
+        title: videos[i].epTitle,
+        email: videos[i].email,
+        rss: videos[i].rss,
+        priority: videos[i].priority,
+        id: videos[i].id
+      }
+
+      returnObj.queue.push(o)
+    }
+
+    res.header("Access-Control-Allow-Origin", process.env.HOST);
+    res.header("Access-Control-Allow-Methods", "GET");
+    res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
+    res.status(200).json(returnObj)
+  })
 })
 
 app.get("/admin", (req, res) => {
@@ -560,115 +613,109 @@ app.post("/addvideopreview", csrfProtection, (req, res) => {
 
 })
 
-function createApiRouter () {
-  var router = new express.Router()
+app.post("/api/video", (req, res) => {
+  if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
+    if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
+      if (req.body.font == undefined) {
+        font = "Montserrat"
+      } else {
+        font = req.body.font
+      }
 
-  router.post("/api/video", (req, res) => {
-    if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
-      if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
-        if (req.body.font == undefined) {
-          font = "Montserrat"
-        } else {
-          font = req.body.font
-        }
-  
-        bdd.Video.create({
-          email: req.body.email,
-          rss: "__custom__",
-          template: req.body.template,
-          access_token: randtoken.generate(32),
-          epTitle: req.body.epTitle,
-          epImg: req.body.imgURL,
-          podTitle: req.body.podTitle,
-          podSub: req.body.podSub,
-          audioURL: req.body.audioURL,
-          font: font
-        }).then((video) => {
-          initNewGeneration();
-          res.status(200).json({id: video.id, token: video.access_token});
-        }).catch((err) => {
-          console.error(err);
-          res.status(500);
-        })
-      } else {
-        res.status(400).send("Votre requète n'est pas complète...")
-      }
+      bdd.Video.create({
+        email: req.body.email,
+        rss: "__custom__",
+        template: req.body.template,
+        access_token: randtoken.generate(32),
+        epTitle: req.body.epTitle,
+        epImg: req.body.imgURL,
+        podTitle: req.body.podTitle,
+        podSub: req.body.podSub,
+        audioURL: req.body.audioURL,
+        font: font
+      }).then((video) => {
+        initNewGeneration();
+        res.status(200).json({id: video.id, token: video.access_token});
+      }).catch((err) => {
+        console.error(err);
+        res.status(500);
+      })
     } else {
-      res.status(401).send("Vous n'avez pas le bon mot de passe d'API")
+      res.status(400).send("Votre requète n'est pas complète...")
     }
-  })
-  
-  router.get("/api/video/:id", (req, res) => {
-    if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
-      if (req.query.token != undefined) {
-        bdd.Video.findByPk(req.params.id).then((video) => {
-          if (video != null) {
-            if (req.query.token == video.access_token) {
-              returnObj = {
-                id: video.id, 
-                status: video.status, 
-                download_url: process.env.HOST + "/download/" + video.id + "?token=" + video.access_token
-              }
-    
-              if (video.status == "finished") {
-                returnObj.delete_timestamp = parseInt(video.end_timestamp) + (process.env.KEEPING_TIME * 60 * 60 * 1000) 
-              }
-              res.status(200).json(returnObj);
-            } else {
-              res.status(401).send("Le token n'est pas juste")
+  } else {
+    res.status(401).send("Vous n'avez pas le bon mot de passe d'API")
+  }
+})
+
+app.get("/api/video/:id", (req, res) => {
+  if (req.query.pwd != undefined && req.query.pwd == process.env.API_PWD) {
+    if (req.query.token != undefined) {
+      bdd.Video.findByPk(req.params.id).then((video) => {
+        if (video != null) {
+          if (req.query.token == video.access_token) {
+            returnObj = {
+              id: video.id, 
+              status: video.status, 
+              download_url: process.env.HOST + "/download/" + video.id + "?token=" + video.access_token
             }
+  
+            if (video.status == "finished") {
+              returnObj.delete_timestamp = parseInt(video.end_timestamp) + (process.env.KEEPING_TIME * 60 * 60 * 1000) 
+            }
+            res.status(200).json(returnObj);
           } else {
-            res.status(404).send("Il n'y a pas de vidéo " + req.params.id)
+            res.status(401).send("Le token n'est pas juste")
           }
-  
-        })
-      } else {
-        res.status(401).send("Vous devez préciser un token d'accès pour la vidéo")
-      }
+        } else {
+          res.status(404).send("Il n'y a pas de vidéo " + req.params.id)
+        }
+
+      })
     } else {
-      res.status(401).send("Vous n'avez pas le bon mot de passe d'API")
-    }  
-  })
-  
-  router.get("/api/feed", (req, res) => {
-    checkIfRss(req.query.url, (is_feed) => {
-      if (is_feed) {
-        parser.parseURL(req.query.url, (err, feed) => {
-          resObj = {
-            data: [],
-            message: "Flux " + req.query.url + " trouvé"
-          }
-      
-          feed.items.forEach((i) => {
-            o = {
-              title: i.title,
-              guid: i.guid.replace("<![CDATA[", "").replace("]]>", "")
-            }
-      
-            resObj.data.push(o)
-          })
-      
-          res.header("Access-Control-Allow-Origin", process.env.HOST);
-          res.header("Access-Control-Allow-Methods", "GET");
-          res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
-          res.status(200).json(resObj);
-        })
-      } else {
+      res.status(401).send("Vous devez préciser un token d'accès pour la vidéo")
+    }
+  } else {
+    res.status(401).send("Vous n'avez pas le bon mot de passe d'API")
+  }  
+})
+
+app.get("/api/feed", (req, res) => {
+  checkIfRss(req.query.url, (is_feed) => {
+    if (is_feed) {
+      parser.parseURL(req.query.url, (err, feed) => {
         resObj = {
           data: [],
-          message: "Le flux n'est pas un flux RSS valide"
+          message: "Flux " + req.query.url + " trouvé"
         }
+    
+        feed.items.forEach((i) => {
+          o = {
+            title: i.title,
+            guid: i.guid.replace("<![CDATA[", "").replace("]]>", "")
+          }
+    
+          resObj.data.push(o)
+        })
+    
         res.header("Access-Control-Allow-Origin", process.env.HOST);
         res.header("Access-Control-Allow-Methods", "GET");
         res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
-        res.status(400).json(resObj);
+        res.status(200).json(resObj);
+      })
+    } else {
+      resObj = {
+        data: [],
+        message: "Le flux n'est pas un flux RSS valide"
       }
-  
-    })
-  })
+      res.header("Access-Control-Allow-Origin", process.env.HOST);
+      res.header("Access-Control-Allow-Methods", "GET");
+      res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
+      res.status(400).json(resObj);
+    }
 
-  return router
-}
+  })
+})
 
 // FONCTION DE GENERATIONS
 function restartGeneration() {
@@ -740,7 +787,7 @@ function flush() {
 function initNewGeneration() {
   bdd.Video.count({where: {status: "during"}}).then((nb) => {
     if (nb < process.env.MAX_DURING) {
-      bdd.Video.findOne({where: {status: "waiting"}, order: ["priority", "id"]}).then((video) => {
+      bdd.Video.findOne({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((video) => {
         if(video != null) {
           video.status = 'during'
           video.save().then((video) => {
@@ -757,7 +804,7 @@ function initNewGeneration() {
 
   bdd.Preview.count({where: {status: "during"}}).then((nb) => {
     if (nb < process.env.MAX_DURING_PREVIEW) {
-      bdd.Preview.findOne({where: {status: "waiting"}, order: ["priority", "id"]}).then((preview) => {
+      bdd.Preview.findOne({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((preview) => {
         if (preview != null) {
           preview.status = "during"
           preview.save().then((preview) => {
