@@ -1,10 +1,26 @@
-/*fetch("/admin/queue", {
-    method: "PUT",
-    headers : {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({id: game_id, data: data})
-})*/
+function flushVideo() {
+    fetch("/admin/action", {
+        method: "POST",
+        headers : {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({action: "flush_video"})
+    }).then(() => {
+        window.location.reload()
+    })
+}
+
+function flushList() {
+    fetch("/admin/action", {
+        method: "POST",
+        headers : {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({action: "flush_list"})
+    }).then(() => {
+        window.location.reload()
+    })
+}
 
 fetch("/admin/queue")
     .then((data) => {
