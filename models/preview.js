@@ -53,14 +53,6 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isIn: [["waiting","during","finished","deleted","error"]]
       }
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE
     }
   }, {
 
