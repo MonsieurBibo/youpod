@@ -669,44 +669,44 @@ function restartGeneration() {
 }
 
 function flush() {
-  db.all(`SELECT * FROM video WHERE status='finished'`, (err, rows) => {
-    if (rows.length >=1) {
-      for (i = 0; i < rows.length; i++) {
-        time = Date.now() - rows[i].end_timestamp
+  bdd.Video.findAll({where: {status: "finished"}}).then((videos) => {
+    if (videos.length >=1) {
+      for (i = 0; i < videos.length; i++) {
+        time = Date.now() - videos[i].end_timestamp
         time = time / (1000 * 60 * 60);
     
         if (time > process.env.KEEPING_TIME) {
           try {
-            fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${rows[i].id}.mp4`))
+            fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${videos[i].id}.mp4`))
           } catch (err) {
-            console.log(`Fichier output_${rows[i].id}.mp4 déjà supprimé`)
+            console.log(`Fichier output_${videos[i].id}.mp4 déjà supprimé`)
           }
-          db.run(`UPDATE video SET status='deleted' WHERE id=${rows[i].id}`);
-          console.log("Flush video " + rows[i].id)
+          db.run(`UPDATE video SET status='deleted' WHERE id=${videos[i].id}`);
+          console.log("Flush video " + videos[i].id)
     
         }
       }
     }
   })
 
-  db.all(`SELECT * FROM preview WHERE status='finished'`, (err, rows) => {
-    if (rows.length >=1) {
-      for (i = 0; i < rows.length; i++) {
-        time = Date.now() - rows[i].end_timestamp
+  bdd.Preview.findAll({where: {status: "finished"}}).then((previews) => {
+    if (previews.length >=1) {
+      for (i = 0; i < previews.length; i++) {
+        time = Date.now() - previews[i].end_timestamp
         time = time / (1000 * 60 * 60);
     
         if (time > process.env.KEEPING_TIME) {
           try {
-            fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${rows[i].id}.mp4`))
+            fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${previews[i].id}.mp4`))
           } catch (err) {
-            console.log(`Fichier preview_${rows[i].id}.mp4 déjà supprimé`)
+            console.log(`Fichier preview_${previews[i].id}.mp4 déjà supprimé`)
           }
-          db.run(`UPDATE preview SET status='deleted' WHERE id=${rows[i].id}`);
-          console.log("Flush preview " + rows[i].id)
+          db.run(`UPDATE preview SET status='deleted' WHERE id=${previews[i].id}`);
+          console.log("Flush preview " + previews[i].id)
     
         }
       }
-    }    
+    } 
   })
 }
 
