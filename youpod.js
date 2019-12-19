@@ -745,13 +745,13 @@ function initNewGeneration() {
 function generateImgPreview(id) {
   console.log("Preview " + id + " Démarage de la création");
 
-  db.each(`SELECT * FROM preview WHERE id=${id}`, (err, row) => {
+  bdd.Preview.findByPk(id).then((preview) => {
     var template = fs.readFileSync(path.join(__dirname, "/template/preview.mustache"), "utf8");
 
     var renderObj = {
-      "imageURL": row.imgLink,
-      "epTitle": row.epTitle,
-      "podTitle": row.podTitle
+      "imageURL": preview.imgLink,
+      "epTitle": preview.epTitle,
+      "podTitle": preview.podTitle
     }
 
     string = mustache.render(template, renderObj);
@@ -774,7 +774,7 @@ function generateImgPreview(id) {
       await browser.close();
       console.log("Preview " + id + " Image générée!")
 
-      downloadAudioPreview(id, row.audioLink, row.startTime, row.color)
+      downloadAudioPreview(id, preview.audioLink, preview.startTime, preview.color)
     })();
   })
 }
@@ -782,20 +782,20 @@ function generateImgPreview(id) {
 function generateImgCustom(id) {
   console.log(id + " Démarage de la création");
 
-  db.each(`SELECT * FROM video WHERE id=${id}`, (err, row) => {
-    if (row.template != null && row.template != "") {
-      template = row.template
+  bdd.Video.findByPk(id).then((video) => {
+    if (video.template != null && video.template != "") {
+      template = video.template
     } else {
       var template = fs.readFileSync(path.join(__dirname, "/template/default.mustache"), "utf8");
     }
 
     var renderObj = {
-      "imageURL": row.epImg,
-      "epTitle": row.epTitle,
-      "podTitle": row.podTitle,
-      "podSub": row.podSub,
-      "font": row.font,
-      "font_url": row.font.replace(/ /g, "+")
+      "imageURL": video.epImg,
+      "epTitle": video.epTitle,
+      "podTitle": video.podTitle,
+      "podSub": video.podSub,
+      "font": video.font,
+      "font_url": video.font.replace(/ /g, "+")
     }
 
     string = mustache.render(template, renderObj);
@@ -818,7 +818,7 @@ function generateImgCustom(id) {
       await browser.close();
       console.log(id + " Image générée!")
 
-      downloadAudioCustom(id, row.audioURL, row.epTitle)
+      downloadAudioCustom(id, video.audioURL, video.epTitle)
     })();
   })
 }
@@ -928,12 +928,17 @@ function generateVideoPreview(id, time, color) {
 
   child.on('close', function (code) {
     console.log("Preview " + id + " Vidéo générée!")
-    db.run(`UPDATE preview SET status='finished', end_timestamp='${Date.now()}' WHERE id=${id}`);
-    fs.unlinkSync(path.join(__dirname, "/tmp/", `preview_${id}.png`))
-    fs.unlinkSync(path.join(__dirname, "/tmp/", `preview_${id}.mp3`))
-
-    sendMailPreview(id);
-    initNewGeneration();
+    bdd.Preview.update({ status: "finished", end_timestamp: Date.now() }, {
+      where: {
+        id: id
+      }
+    }).then(() => {
+      fs.unlinkSync(path.join(__dirname, "/tmp/", `preview_${id}.png`))
+      fs.unlinkSync(path.join(__dirname, "/tmp/", `preview_${id}.mp3`))
+  
+      sendMailPreview(id);
+      initNewGeneration();
+    });
   });
 }
 
@@ -965,33 +970,35 @@ function generateVideo(id, ep_title) {
   
     child.on('close', function (code) {
       console.log(id + " Vidéo générée!")
-      db.run(`UPDATE video SET status='finished', end_timestamp='${Date.now()}' WHERE id=${id}`);
-      fs.unlinkSync(path.join(__dirname, "/tmp/", `overlay_${id}.png`))
-      fs.unlinkSync(path.join(__dirname, "/tmp/", `audio_${id}.mp3`))
-      fs.unlinkSync(path.join(__dirname, "/tmp/", `loop_${id}.mp4`))
-  
-      sendMail(id, ep_title);
-      initNewGeneration();
+      bdd.Video.update({ status: "finished", end_timestamp: Date.now() }, {
+        where: {
+          id: id
+        }
+      }).then(() => { 
+        fs.unlinkSync(path.join(__dirname, "/tmp/", `overlay_${id}.png`))
+        fs.unlinkSync(path.join(__dirname, "/tmp/", `audio_${id}.mp3`))
+        fs.unlinkSync(path.join(__dirname, "/tmp/", `loop_${id}.mp4`))
+    
+        sendMail(id, ep_title);
+        initNewGeneration();
+      })
     });
   });
-
-
 }
 
 function sendMailPreview(id) {
-  db.all(`SELECT * FROM preview WHERE id='${id}'`, (err, rows) => {
-
+  bdd.Preview.findByPk(id).then((preview) => {
     template = fs.readFileSync(path.join(__dirname, "/web/mail_custom.mustache"), "utf8")
     renderObj = {
-      "ep_title": rows[0].epTitle,
+      "ep_title": preview.epTitle,
       "keeping_time": process.env.KEEPING_TIME,
-      "video_link": process.env.HOST + "/download/preview/" + id + "?token=" + rows[0].access_token
+      "video_link": process.env.HOST + "/download/preview/" + id + "?token=" + preview.access_token
     }
 
 
     const mailOptions = {
       from: 'youpod@balado.tools', // sender address
-      to: rows[0].email, // list of receivers
+      to: preview.email, // list of receivers
       subject: `Vidéo générée sur Youpod!`, // Subject line
       html: mustache.render(template, renderObj)
     };
@@ -1000,34 +1007,34 @@ function sendMailPreview(id) {
       if(err) return console.log(err)
     });
 
-    db.run(`UPDATE preview SET email='deleted' WHERE id=${id}`);
+    preview.email = "deleted"
+    preview.save();
   })
 }
 
 function sendMail(id, ep_title) {
-  db.all(`SELECT * FROM video WHERE id='${id}'`, (err, rows) => {
-
-    if (rows[0].rss != "__custom__") {
+  bdd.Video.findByPk(id).then((video) => {
+    if (video.rss != "__custom__") {
       template = fs.readFileSync(path.join(__dirname, "/web/mail.mustache"), "utf8")
       renderObj = {
-        "rss_link": rows[0].rss,
+        "rss_link": video.rss,
         "keeping_time": process.env.KEEPING_TIME,
         "epTitle": ep_title,
-        "video_link": process.env.HOST + "/download/" + id + "?token=" + rows[0].access_token
+        "video_link": process.env.HOST + "/download/" + id + "?token=" + video.access_token
       }
     } else {
       template = fs.readFileSync(path.join(__dirname, "/web/mail_custom.mustache"), "utf8")
       renderObj = {
-        "ep_title": rows[0].epTitle,
+        "ep_title": video.epTitle,
         "keeping_time": process.env.KEEPING_TIME,
-        "video_link": process.env.HOST + "/download/" + id + "?token=" + rows[0].access_token
+        "video_link": process.env.HOST + "/download/" + id + "?token=" + video.access_token
       }
     }
 
 
     const mailOptions = {
       from: 'youpod@balado.tools', // sender address
-      to: rows[0].email, // list of receivers
+      to: video.email, // list of receivers
       subject: `Vidéo générée sur Youpod : ${ep_title}`, // Subject line
       html: mustache.render(template, renderObj)
     };
@@ -1036,7 +1043,8 @@ function sendMail(id, ep_title) {
       if(err) return console.log(err)
     });
 
-    db.run(`UPDATE video SET email='deleted' WHERE id=${id}`);
+    video.email = "deleted"
+    video.save()
   })
 }
 
