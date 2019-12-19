@@ -7,7 +7,6 @@ const { spawn } = require('child_process');
 const express = require('express')
 const bodyParser = require('body-parser');
 const randtoken = require('rand-token');
-const sq = require('sqlite3');
 const nodemailer = require("nodemailer");
 const puppeteer = require('puppeteer');
 const session = require('express-session');
@@ -57,10 +56,6 @@ app.use(function (err, req, res, next) {
   res.status(403)
   res.send("Bad CSRF")
 })
-
-//Connexion à la base de donnée
-sq.verbose();
-var db = new sq.Database(__dirname + "/base.db");
 
 //Reprise des générations en cas d'erreur
 flush();
@@ -672,7 +667,8 @@ function flush() {
           } catch (err) {
             console.log(`Fichier output_${videos[i].id}.mp4 déjà supprimé`)
           }
-          db.run(`UPDATE video SET status='deleted' WHERE id=${videos[i].id}`);
+          videos[i].status = "deleted"
+          videos[i].save()
           console.log("Flush video " + videos[i].id)
     
         }
@@ -692,7 +688,9 @@ function flush() {
           } catch (err) {
             console.log(`Fichier preview_${previews[i].id}.mp4 déjà supprimé`)
           }
-          db.run(`UPDATE preview SET status='deleted' WHERE id=${previews[i].id}`);
+
+          previews[i].status = "deleted"
+          previews[i].save()
           console.log("Flush preview " + previews[i].id)
     
         }
@@ -832,7 +830,11 @@ function generateFeed(feed_url, guid, temp, id, font) {
     }
 
     if (i == feed.items.length) {
-      db.run(`UPDATE video SET email='error' WHERE id=${id}`);
+      bdd.Video.update({ status: "error", email: "error" }, {
+        where: {
+          id: id
+        }
+      })
       return;
     }
 
