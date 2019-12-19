@@ -1,6 +1,10 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const Preview = sequelize.define('Preview', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true
+    },
     email: DataTypes.STRING,
     epTitle: DataTypes.STRING,
     podTitle: DataTypes.STRING,

@@ -1,7 +1,10 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const Video = sequelize.define('Video', {
-    id: DataTypes.INTEGER,
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true
+    },
     email: DataTypes.STRING,
     rss: DataTypes.STRING,
     guid: DataTypes.STRING,
