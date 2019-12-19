@@ -10,10 +10,7 @@ module.exports = {
       },
       email: {
         type: Sequelize.STRING,
-        allowNull: false,
-        validate: {
-          isEmail: true
-        }
+        allowNull: false
       },
       epTitle: {
         type: Sequelize.STRING,

@@ -4,7 +4,7 @@ const db = require(__dirname + "/models/index.js")
 
 console.log("Création des fichiers de base")
 
-if (!fs.existsSync(path.join(__dirname, "/config.json"))) {
+if (!fs.existsSync(path.join(__dirname, "/.env"))) {
     fs.writeFileSync(path.join(__dirname, ".env"), `
 PORT=5674
 MAX_DURING=1

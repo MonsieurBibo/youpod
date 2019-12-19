@@ -322,7 +322,7 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                 guid: guid,
                 template: req.body.template,
                 access_token: randtoken.generate(32),
-                fond:req.body["font-choice"]
+                font:req.body["font-choice"]
               }).then((video) => {
                 initNewGeneration();
                 res.sendFile(path.join(__dirname, "/web/done.html"))
@@ -335,7 +335,7 @@ app.post("/addvideo", csrfProtection, (req, res) => {
               guid: req.body.selectEp,
               template: req.body.template,
               access_token: randtoken.generate(32),
-              fond:req.body["font-choice"]
+              font:req.body["font-choice"]
             }).then((video) => {
               initNewGeneration();
               res.sendFile(path.join(__dirname, "/web/done.html"))
@@ -368,7 +368,7 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                   guid: guid,
                   template: req.body.template,
                   access_token: randtoken.generate(32),
-                  fond:req.body["font-choice"]
+                  font:req.body["font-choice"]
                 }).then((video) => {
                   initNewGeneration();
                   res.sendFile(path.join(__dirname, "/web/done.html"))
@@ -381,7 +381,7 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                 guid: req.body.selectEp,
                 template: req.body.template,
                 access_token: randtoken.generate(32),
-                fond:req.body["font-choice"]
+                font:req.body["font-choice"]
               }).then((video) => {
                 initNewGeneration();
                 res.sendFile(path.join(__dirname, "/web/done.html"))
@@ -536,7 +536,7 @@ function createApiRouter () {
         if (req.body.font == undefined) {
           font = "Montserrat"
         } else {
-          font = req.body.fond
+          font = req.body.font
         }
   
         bdd.Video.create({
