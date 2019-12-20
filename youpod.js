@@ -97,129 +97,183 @@ app.get("/login", csrfProtection, (req, res) => {
   res.send(mustache.render(template, render_object))
 })
 
-app.post("/admin/action", (req, res) => {
-  if (req.body.action == "flush_video") {
-    bdd.Video.findAll({where: {status: "finished"}}).then((videos) => {
-      videos.forEach((v) => {
-        try {
-          fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${v.id}.mp4`))
-        } catch (err) {
-          console.log(`Fichier output_${v.id}.mp4 déjà supprimé`)
-        }
-        v.status = "deleted"
-        v.save()
-        console.log("Flush video " + v.id)
-      })
+app.post("/admin/authenticate", csrfProtection, (req, res) => {
+  if (req.body.password != undefined) {
+    if (req.body.password != process.env.ADMIN_PWD) {
+      req.session.message = "Mot de passe incorrect";
 
-      res.status(200).send("Vidéos supprimées!")
-    })
-  } else if (req.body.action == "flush_list") {
-    bdd.Video.update({ status: "canceled", email: "canceled" }, {
-      where: {
-        status: "waiting"
-      }
-    }).then(() => {
-      res.status(200).send("Liste d'attente effacée!")
-    })
+      req.session.save(function(err) {
+        res.redirect("/admin/login")
+      })
+    } else {
+      req.session.loggin_admin = true;
+      req.session.message = undefined;
+
+      req.session.save(function(err) {
+        res.redirect("/admin")
+      })
+    }
+  } else {
+    res.redirect("/admin/login")
+  }
+})
+
+app.get("/admin/login", csrfProtection, (req, res) => {
+  template = fs.readFileSync(path.join(__dirname, "/web/login_admin.mustache"), "utf8")
+
+  var render_object = {
+    "msg": req.session.message,
+    "csrfToken": req.csrfToken,
+  }
+
+  res.setHeader("content-type", "text/html");
+  res.send(mustache.render(template, render_object))
+})
+
+app.post("/admin/action", (req, res) => {
+  if (req.session.loggin_admin != undefined) {
+    if (req.body.action == "flush_video") {
+      bdd.Video.findAll({where: {status: "finished"}}).then((videos) => {
+        videos.forEach((v) => {
+          try {
+            fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${v.id}.mp4`))
+          } catch (err) {
+            console.log(`Fichier output_${v.id}.mp4 déjà supprimé`)
+          }
+          v.status = "deleted"
+          v.save()
+          console.log("Flush video " + v.id)
+        })
+  
+        res.status(200).send("Vidéos supprimées!")
+      })
+    } else if (req.body.action == "flush_list") {
+      bdd.Video.update({ status: "canceled", email: "canceled" }, {
+        where: {
+          status: "waiting"
+        }
+      }).then(() => {
+        res.status(200).send("Liste d'attente effacée!")
+      })
+    }
+  } else {
+    res.status(403)
   }
 })
 
 app.post("/admin/prio/:id", (req, res) => {
-  bdd.Video.update({priority: req.body.priority}, {
-    where: {
-      id: req.params.id
-    }
-  }).then(() => {
-    res.redirect("/admin")
-  })
+  if (req.session.loggin_admin != undefined) {
+    bdd.Video.update({priority: req.body.priority}, {
+      where: {
+        id: req.params.id
+      }
+    }).then(() => {
+      res.redirect("/admin")
+    })
+  } else {
+    res.status(403)
+  }
+
 })
 
 app.post("/admin/option/:key", (req, res) => {
-  bdd.Option.update({value: req.body.value}, {
-    where: {
-      key: req.params.key
-    }
-  }).then(() => {
-    res.redirect("/admin")
-  })
+  if (req.session.loggin_admin != undefined) {
+    bdd.Option.update({value: req.body.value}, {
+      where: {
+        key: req.params.key
+      }
+    }).then(() => {
+      res.redirect("/admin")
+    })
+  } else {
+    res.status(403)
+  }
 })
 
 app.get("/admin/queue", (req, res) => {
-  bdd.Video.findAll({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((videos) => {
-    returnObj = {queue: []}
+  if (req.session.loggin_admin != undefined) {
+    bdd.Video.findAll({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((videos) => {
+      returnObj = {queue: []}
 
-    for (i = 0; i < videos.length; i++) {
-      o = {
-        title: videos[i].epTitle,
-        email: videos[i].email,
-        rss: videos[i].rss,
-        priority: videos[i].priority,
-        id: videos[i].id
+      for (i = 0; i < videos.length; i++) {
+        o = {
+          title: videos[i].epTitle,
+          email: videos[i].email,
+          rss: videos[i].rss,
+          priority: videos[i].priority,
+          id: videos[i].id
+        }
+
+        returnObj.queue.push(o)
       }
 
-      returnObj.queue.push(o)
-    }
-
-    res.header("Access-Control-Allow-Origin", process.env.HOST);
-    res.header("Access-Control-Allow-Methods", "GET");
-    res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
-    res.status(200).json(returnObj)
-  })
+      res.header("Access-Control-Allow-Origin", process.env.HOST);
+      res.header("Access-Control-Allow-Methods", "GET");
+      res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
+      res.status(200).json(returnObj)
+    })
+  } else {
+    res.status(403)
+  }
 })
 
 app.get("/admin", (req, res) => {
-  template = fs.readFileSync(path.join(__dirname, "/web/admin.mustache"), "utf8")
+  if (req.session.loggin_admin != undefined) {
+    template = fs.readFileSync(path.join(__dirname, "/web/admin.mustache"), "utf8")
 
-  bdd.Video.count({where: {
-    [Op.or]: [{status: "finished"}, {status: "deleted"}]
-  }}).then((nb_gen_video) => {
     bdd.Video.count({where: {
-      status: "finished"
-    }}).then((nb_save_video) => {
+      [Op.or]: [{status: "finished"}, {status: "deleted"}]
+    }}).then((nb_gen_video) => {
       bdd.Video.count({where: {
-        [Op.or]: [{status: "waiting"}, {status: "during"}]
-      }}).then((nb_waiting_video) => {
-        bdd.sequelize.query(`SELECT DISTINCT rss FROM Videos`, { raw: true }).then(function(rows){
-          nb_rss_feed = rows[0].length
-
-          getSize(pathEvalute(process.env.EXPORT_FOLDER), (err, size) => {
-            if (err) { throw err; }
-           
-            size_export_folder = (size / 1024 / 1024).toFixed(2) + ' MB';
-
-            getOption("MAX_DURING", (MAX_DURING) => {
-              getOption("MAX_DURING_PREVIEW", (MAX_DURING_PREVIEW) => {
-                getOption("KEEPING_TIME", (KEEPING_TIME) => {
-                  getOption("GMAIL_ADDR", (GMAIL_ADDR) => {
-                    getOption("GEN_PWD", (GEN_PWD) => {
-                      getOption("API_PWD", (API_PWD) => {
-                        var render_object = {
-                          nb_gen_video: nb_gen_video,
-                          nb_save_video: nb_save_video,
-                          nb_waiting_video: nb_waiting_video,
-                          nb_rss_feed: nb_rss_feed,
-                          size_export_folder: size_export_folder,
-                          MAX_DURING: MAX_DURING,
-                          MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
-                          KEEPING_TIME: KEEPING_TIME,
-                          GMAIL_ADDR: GMAIL_ADDR,
-                          GEN_PWD: GEN_PWD,
-                          API_PWD: API_PWD
-                        }
-                      
-                        res.setHeader("content-type", "text/html");
-                        res.send(mustache.render(template, render_object))
+        status: "finished"
+      }}).then((nb_save_video) => {
+        bdd.Video.count({where: {
+          [Op.or]: [{status: "waiting"}, {status: "during"}]
+        }}).then((nb_waiting_video) => {
+          bdd.sequelize.query(`SELECT DISTINCT rss FROM Videos`, { raw: true }).then(function(rows){
+            nb_rss_feed = rows[0].length
+  
+            getSize(pathEvalute(process.env.EXPORT_FOLDER), (err, size) => {
+              if (err) { throw err; }
+             
+              size_export_folder = (size / 1024 / 1024).toFixed(2) + ' MB';
+  
+              getOption("MAX_DURING", (MAX_DURING) => {
+                getOption("MAX_DURING_PREVIEW", (MAX_DURING_PREVIEW) => {
+                  getOption("KEEPING_TIME", (KEEPING_TIME) => {
+                    getOption("GMAIL_ADDR", (GMAIL_ADDR) => {
+                      getOption("GEN_PWD", (GEN_PWD) => {
+                        getOption("API_PWD", (API_PWD) => {
+                          var render_object = {
+                            nb_gen_video: nb_gen_video,
+                            nb_save_video: nb_save_video,
+                            nb_waiting_video: nb_waiting_video,
+                            nb_rss_feed: nb_rss_feed,
+                            size_export_folder: size_export_folder,
+                            MAX_DURING: MAX_DURING,
+                            MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
+                            KEEPING_TIME: KEEPING_TIME,
+                            GMAIL_ADDR: GMAIL_ADDR,
+                            GEN_PWD: GEN_PWD,
+                            API_PWD: API_PWD
+                          }
+                        
+                          res.setHeader("content-type", "text/html");
+                          res.send(mustache.render(template, render_object))
+                        })
                       })
                     })
                   })
                 })
               })
-            })
-          });
-      })
+            });
+        })
+        })
       })
     })
-  })
+  } else {
+    res.redirect("/admin/login")
+  }
 })
 
 app.post("/authenticate", csrfProtection, (req, res) => {
