@@ -134,6 +134,16 @@ app.post("/admin/prio/:id", (req, res) => {
   })
 })
 
+app.post("/admin/option/:key", (req, res) => {
+  bdd.Option.update({value: req.body.value}, {
+    where: {
+      key: req.params.key
+    }
+  }).then(() => {
+    res.redirect("/admin")
+  })
+})
+
 app.get("/admin/queue", (req, res) => {
   bdd.Video.findAll({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((videos) => {
     returnObj = {queue: []}
@@ -177,16 +187,34 @@ app.get("/admin", (req, res) => {
            
             size_export_folder = (size / 1024 / 1024).toFixed(2) + ' MB';
 
-            var render_object = {
-              nb_gen_video: nb_gen_video,
-              nb_save_video: nb_save_video,
-              nb_waiting_video: nb_waiting_video,
-              nb_rss_feed: nb_rss_feed,
-              size_export_folder: size_export_folder
-            }
-          
-            res.setHeader("content-type", "text/html");
-            res.send(mustache.render(template, render_object))
+            getOption("MAX_DURING", (MAX_DURING) => {
+              getOption("MAX_DURING_PREVIEW", (MAX_DURING_PREVIEW) => {
+                getOption("KEEPING_TIME", (KEEPING_TIME) => {
+                  getOption("GMAIL_ADDR", (GMAIL_ADDR) => {
+                    getOption("GEN_PWD", (GEN_PWD) => {
+                      getOption("API_PWD", (API_PWD) => {
+                        var render_object = {
+                          nb_gen_video: nb_gen_video,
+                          nb_save_video: nb_save_video,
+                          nb_waiting_video: nb_waiting_video,
+                          nb_rss_feed: nb_rss_feed,
+                          size_export_folder: size_export_folder,
+                          MAX_DURING: MAX_DURING,
+                          MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
+                          KEEPING_TIME: KEEPING_TIME,
+                          GMAIL_ADDR: GMAIL_ADDR,
+                          GEN_PWD: GEN_PWD,
+                          API_PWD: API_PWD
+                        }
+                      
+                        res.setHeader("content-type", "text/html");
+                        res.send(mustache.render(template, render_object))
+                      })
+                    })
+                  })
+                })
+              })
+            })
           });
       })
       })

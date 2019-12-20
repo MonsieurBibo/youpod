@@ -181,7 +181,52 @@ new ConditionalField({
             </tr>
         </thead>
     </table>
-  
+
+    <div class="activity lead">
+        <h2>Options</h2>  
+    </div>
+
+    <form action="/admin/option/MAX_DURING" method="POST">
+        <label for="value">Nombre de vidéos en même temps</label>
+        <input required type="number" name="value" value="{{ MAX_DURING }}" />
+        <input type="submit" value="Mettre à jour" />
+    </form>
+
+    <form action="/admin/option/MAX_DURING_PREVIEW" method="POST">
+        <label for="value">Nombre de préviews en même temps</label>
+        <input required type="number" name="value" value="{{ MAX_DURING_PREVIEW }}" />
+        <input type="submit" value="Mettre à jour" />
+    </form>
+    
+    <form action="/admin/option/KEEPING_TIME" method="POST">
+        <label for="value">Temps de concervation de la video</label>
+        <input required type="number" name="value" value="{{ KEEPING_TIME }}" />
+        <input type="submit" value="Mettre à jour" />
+    </form>
+
+    <form action="/admin/option/GMAIL_ADDR" method="POST">
+        <label for="value">Adresse de votre compte Gmail</label>
+        <input required type="email" name="value" value="{{ GMAIL_ADDR }}" />
+        <input type="submit" value="Mettre à jour" />
+    </form>
+
+    <form action="/admin/option/GMAIL_PWD" method="POST">
+        <label for="value">Mot de passe de votre compte Gmail</label>
+        <input required type="password" name="value" />
+        <input type="submit" value="Mettre à jour" />
+    </form>
+
+    <form action="/admin/option/GEN_PWD" method="POST">
+        <label for="value">Mot de passe de l'instance (vide pour aucun)</label>
+        <input required type="text" name="value" value="{{ GEN_PWD }}" />
+        <input type="submit" value="Mettre à jour" />
+    </form>
+
+    <form action="/admin/option/API_PWD" method="POST">
+        <label for="value">Mot de passe de l'API (obligatoire)</label>
+        <input required type="text" name="value" value="{{ API_PWD }}" />
+        <input type="submit" value="Mettre à jour" />
+    </form>
 
 </div>
         <script src="/static/admin.js"></script>
