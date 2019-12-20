@@ -12,6 +12,14 @@ On a quand même ajouté une petite boucle vidéo derrière pour que ça ressemb
 
 [![Demo](https://img.youtube.com/vi/Lpa5UtjI9NE/0.jpg)](https://www.youtube.com/watch?v=Lpa5UtjI9NE)
 
+Source : https://robotsettondeuses.lepodcast.fr/
+
+
+
+[![Demo](https://img.youtube.com/vi/H5IUxtKbapI/0.jpg)](https://www.youtube.com/watch?v=H5IUxtKbapI)
+
+Source : https://aspacemr.lepodcast.fr/
+
 L'idée de réaliser cet outil vient de [ce tuto d'Alliés Numériques](https://alliesnumeriques.org/tutoriels/publier-votre-podcast-sur-youtube-la-methode-classe-avec-ffmpeg/).
 
 
