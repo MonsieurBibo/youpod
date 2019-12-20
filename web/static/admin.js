@@ -35,6 +35,22 @@ fetch("/admin/queue")
             row.insertCell().innerHTML = v.id
             row.insertCell().innerHTML = v.rss != "__custom__" ? v.rss : v.title
             row.insertCell().innerHTML = v.email
-            row.insertCell().innerHTML = `<form action="/admin/prio/${v.id}" method="post"><input type="number" name="priority" value="${v.priority}" required /><input type="submit" value="Changer" /></form>`
+            row.insertCell().innerHTML = createForm(v)
         })
     })
+
+function submitPrio(id) {
+    document.getElementById("prio_" + id).submit()
+}
+
+function createForm(v) {
+    return `
+        <form id="prio_${v.id}" action="/admin/prio/${v.id}" method="post">
+            <select name="priority" id="priority-select" onchange="submitPrio(${v.id})">
+                <option ${v.priority == 0 ? "selected" : ""} value="0">Normale</option>
+                <option ${v.priority == -1 ? "selected" : ""} value="-1">Basse</option>
+                <option ${v.priority == 1 ? "selected" : ""} value="1">Elevée</option>
+            </select>
+        </form>
+    `
+}

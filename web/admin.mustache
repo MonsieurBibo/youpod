@@ -1,48 +1,189 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Youpod</title>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-        <link href="./static/style.css" rel="stylesheet">
-    </head>
-    <body>
-        <header>
-            <h1>Bienvenue sur la page d'Administration de Youpod</h1>
-        </header>
+<!doctype html>
+<html lang="fr">
+ <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <title>YouPod</title>
 
-        <section>
-            <h2>Statistiques</h2>
-            <p>Vidéo(s) générées : {{ nb_gen_video }}</p>
-            <p>Vidéo(s) sauvegardées : {{ nb_save_video }}</p>
-            <p>Taille du fichier de video : {{ size_export_folder}}</p>
-            <p>Vidéo(s) en attente : {{ nb_waiting_video }}</p>
-            <p>Nombre de flux RSS Différents : {{ nb_rss_feed }}</p>
-        </section>
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.4/examples/floating-labels/">
 
-        <section>
-            <h2>File d'attente</h2>
-            <button onclick="flushVideo()">Effacer toutes les vidéos générées</button>
-            <button onclick="flushList()">Vider la liste</button>
-            <table id="queue">
-                    <thead>
-                        <tr>
-                            <th>Identifiant</th>
-                            <th>RSS/Titre</th>
-                            <th>Email</th>
-                            <th>Priorité</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- Favicons -->
+<link rel="apple-touch-icon" href="static/apple-touch-icon.png" sizes="180x180">
+<link rel="icon" href="static/favicon-32x32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="static/favicon-16x16.png" sizes="16x16" type="image/png">
+<link rel="manifest" href="static/manifest.json">
+<link rel="mask-icon" href="static/safari-pinned-tab.svg" color="#563d7c">
+<link rel="icon" href="static/favicon.ico">
+<meta name="msapplication-config" content="static/browserconfig.xml">
+<meta name="theme-color" content="#563d7c">
 
-                        </tr>
-                    </tbody>
-            </table>
-        </section>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+
+<!-- conditionnal fields -->
+<script src="./static/conditional-field.min.js"></script>
+<script type="text/javascript">
+new ConditionalField({
+  control: '.payment-checkbox',
+  visibility: {
+    'off': '.credit',
+    'on': '.check'
+  }
+});
+
+</script>
+
+<style>
+   .activity {
+  display: flex;
+  flex-direction: row; 
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+	}
+
+.blink {
+    font-size : 200%;
+    color : red;
+    margin-right: 0.5rem;
+      animation: blink 2s steps(5, start) infinite;
+      -webkit-animation: blink 1s steps(5, start) infinite;
+    }
+    @keyframes blink {
+      to {
+        visibility: hidden;
+      }
+    }
+    @-webkit-keyframes blink {
+      to {
+        visibility: hidden;
+      }
+    }
+.noblink {
+    font-size : 200%;
+    color : grey;
+    margin-right: 0.5rem;
+   
+    }
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+      .info {
+    margin-bottom: 12px;
+    text-align: center;
+    }
+    .footer {
+      font-size: 80%;
+    }
+    .switch{
+      margin-left: 19%;
+    }
+    .font-test{
+    background-color: white;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.1) inset;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+	}
+
+
+
+	.apply-font{
+		padding: 0.5rem;
+		margin-block-end: 0;
+	}
+
+  .iconsadmin{
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  .thead-dark {
+    text-align: center;
+    color: #fff;
+    background-color: #2453AA;
+    border-color: #2453AA;
+  }
+
+
+
+    }
+    
+    </style>
+    <!-- Custom styles for this template -->
+    <link href="./static/floating-labels.css" rel="stylesheet">
+</head>
+  <body>
+<div class="form-signin container">
+  <div class="text-center mb-4">
+    <img class="mb-4" src="./static/logo.png" alt="YouPod" width="300" height="69">
+  
+  <h1> Panneau d'administration</h1>
+  </div>
+  <div class="activity lead">
+    <h2>Statistiques</h2>
+  </div>  
+ 
+  <div class="row">
+     <div class="col-sm iconsadmin">
+     <img class="mb-4" src="./static/waiting.png" alt="waiting" width="40" height="40"><br>
+     <b>{{ nb_waiting_video }}</b><br>
+      <small>vidéos en attente</small>
+    </div>
+    <div class="col-sm iconsadmin">
+      <img class="mb-4" src="./static/generated.png" alt="generated" width="40" height="40"><br>
+     <b>{{ nb_gen_video }}</b><br>
+      <small>vidéos générées</small>
+    </div>
+    <div class="col-sm iconsadmin">
+      <img class="mb-4" src="./static/downloaded.png" alt="downloaded" width="40" height="40"><br>
+     <b>{{ nb_save_video }}</b><br>
+      <small>vidéos à télécharger</small>
+    </div>
+    <div class="col-sm iconsadmin">
+      <img class="mb-4" src="./static/storage.png" alt="storage" width="40" height="40"><br>
+     <b>{{ size_export_folder }}</b><br>
+      <small>stockés sur le serveur</small>
+    </div>
+    <div class="col-sm iconsadmin">
+      <img class="mb-4" src="./static/feed.png" alt="generated" width="40" height="40"><br>
+     <b>{{ nb_rss_feed }}</b><br>
+      <small>flux différents</small>
+    </div>
+  </div>
+  <div class="activity lead">
+  <h2>File d'attente</h2>  
+  </div>
+    <button onclick="flushVideo()">Effacer toutes les vidéos à télécharger</button>
+    <button onclick="flushList()">Vider la liste</button>
+  <table id="queue" class="table table-sm table-hover table-borderless">
+        <thead class="thead-dark">
+            <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Titre</th>
+            <th scope="col">Mail</th>
+            <th scope="col">Priorité</th>
+            </tr>
+        </thead>
+    </table>
+  
+
+</div>
         <script src="/static/admin.js"></script>
-        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>    
-    </body>
+</body>
 </html>
