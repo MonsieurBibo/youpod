@@ -190,7 +190,7 @@ new ConditionalField({
         <h2>Options</h2>  
     </div>
 
-    <form class="form-signin" action="/admin/option" method="POST">
+    <form class="form-signin" id="form_option" action="/admin/option" method="POST">
 
   <div class="info">
     <small>Voici les options qui vous permettent de pas aller toucher un fichier de config</small>
@@ -231,7 +231,7 @@ new ConditionalField({
         <label for="API_PWD">Mot de passe de l'API</label>
     </div>
 
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Sauvegarder</button>
+    <button class="btn btn-lg btn-primary btn-block" onclick="submitForm()">Sauvegarder</button>
 
     </form>
 </div>

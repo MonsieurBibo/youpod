@@ -43,6 +43,12 @@ function submitPrio(id) {
     document.getElementById("prio_" + id).submit()
 }
 
+function submitForm() {
+    if (confirm("Valider ces informations?")) {
+        document.getElementById("form_option").submit()
+    }
+}
+
 function createForm(v) {
     return `
         <form id="prio_${v.id}" action="/admin/prio/${v.id}" method="post">
