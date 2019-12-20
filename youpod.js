@@ -167,14 +167,18 @@ app.post("/admin/prio/:id", (req, res) => {
 
 })
 
-app.post("/admin/option/:key", (req, res) => {
+app.post("/admin/option", (req, res) => {
   if (req.session.loggin_admin != undefined) {
-    bdd.Option.update({value: req.body.value}, {
-      where: {
-        key: req.params.key
-      }
-    }).then(() => {
-      res.redirect("/admin")
+    keys = Object.keys(req.body)
+
+    keys.forEach((k) => {
+      bdd.Option.update({value: req.body[k]}, {
+        where: {
+          key: k
+        }
+      }).then(() => {
+        res.redirect("/admin")
+      })
     })
   } else {
     res.status(403)
@@ -233,24 +237,27 @@ app.get("/admin", (req, res) => {
                 getOption("MAX_DURING_PREVIEW", (MAX_DURING_PREVIEW) => {
                   getOption("KEEPING_TIME", (KEEPING_TIME) => {
                     getOption("GMAIL_ADDR", (GMAIL_ADDR) => {
-                      getOption("GEN_PWD", (GEN_PWD) => {
-                        getOption("API_PWD", (API_PWD) => {
-                          var render_object = {
-                            nb_gen_video: nb_gen_video,
-                            nb_save_video: nb_save_video,
-                            nb_waiting_video: nb_waiting_video,
-                            nb_rss_feed: nb_rss_feed,
-                            size_export_folder: size_export_folder,
-                            MAX_DURING: MAX_DURING,
-                            MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
-                            KEEPING_TIME: KEEPING_TIME,
-                            GMAIL_ADDR: GMAIL_ADDR,
-                            GEN_PWD: GEN_PWD,
-                            API_PWD: API_PWD
-                          }
-                        
-                          res.setHeader("content-type", "text/html");
-                          res.send(mustache.render(template, render_object))
+                      getOption("GMAIL_PWD", (GMAIL_PWD) => {
+                        getOption("GEN_PWD", (GEN_PWD) => {
+                          getOption("API_PWD", (API_PWD) => {
+                            var render_object = {
+                              nb_gen_video: nb_gen_video,
+                              nb_save_video: nb_save_video,
+                              nb_waiting_video: nb_waiting_video,
+                              nb_rss_feed: nb_rss_feed,
+                              size_export_folder: size_export_folder,
+                              MAX_DURING: MAX_DURING,
+                              MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
+                              KEEPING_TIME: KEEPING_TIME,
+                              GMAIL_ADDR: GMAIL_ADDR,
+                              GMAIL_PWD: GMAIL_PWD,
+                              GEN_PWD: GEN_PWD,
+                              API_PWD: API_PWD
+                            }
+                          
+                            res.setHeader("content-type", "text/html");
+                            res.send(mustache.render(template, render_object))
+                          })
                         })
                       })
                     })

@@ -136,11 +136,6 @@ new ConditionalField({
   </div>  
  
   <div class="row">
-     <div class="col-sm iconsadmin">
-     <img class="mb-4" src="./static/waiting.png" alt="waiting" width="40" height="40"><br>
-     <b>{{ nb_waiting_video }}</b><br>
-      <small>vidéos en attente</small>
-    </div>
     <div class="col-sm iconsadmin">
       <img class="mb-4" src="./static/generated.png" alt="generated" width="40" height="40"><br>
      <b>{{ nb_gen_video }}</b><br>
@@ -148,8 +143,9 @@ new ConditionalField({
     </div>
     <div class="col-sm iconsadmin">
       <img class="mb-4" src="./static/downloaded.png" alt="downloaded" width="40" height="40"><br>
-     <b>{{ nb_save_video }}</b><br>
-      <small>vidéos à télécharger</small>
+     <b>{{ nb_save_video }}</b> Vidéos<br>
+      <small>Stockées</small><br>
+      <small><button onclick="flushVideo()">Vider</button></small>      
     </div>
     <div class="col-sm iconsadmin">
       <img class="mb-4" src="./static/storage.png" alt="storage" width="40" height="40"><br>
@@ -165,8 +161,20 @@ new ConditionalField({
   <div class="activity lead">
   <h2>File d'attente</h2>  
   </div>
-    <button onclick="flushVideo()">Effacer toutes les vidéos à télécharger</button>
-    <button onclick="flushList()">Vider la liste</button>
+
+  <div class="row waiting">
+    <div class="col-sm-2 "></div>
+    <div class="col-sm-2 ">
+     <img class="mb" src="./static/waiting.png" alt="waiting" width="40" height="40"><br>
+    </div>
+    <div class="col-sm-6 ">
+     <b>{{ nb_waiting_video }}</b> Vidéos en attente<br>
+     <small><button onclick="flushList()">Vider</button><br>
+    </div>
+    <div class="col-sm-2 "></div>
+
+  </div>
+  <br><br>
   <table id="queue" class="table table-sm table-hover table-borderless">
         <thead class="thead-dark">
             <tr>
@@ -182,48 +190,50 @@ new ConditionalField({
         <h2>Options</h2>  
     </div>
 
-    <form action="/admin/option/MAX_DURING" method="POST">
-        <label for="value">Nombre de vidéos en même temps</label>
-        <input required type="number" name="value" value="{{ MAX_DURING }}" />
-        <input type="submit" value="Mettre à jour" />
-    </form>
+    <form class="form-signin" action="/admin/option" method="POST">
 
-    <form action="/admin/option/MAX_DURING_PREVIEW" method="POST">
-        <label for="value">Nombre de préviews en même temps</label>
-        <input required type="number" name="value" value="{{ MAX_DURING_PREVIEW }}" />
-        <input type="submit" value="Mettre à jour" />
-    </form>
-    
-    <form action="/admin/option/KEEPING_TIME" method="POST">
-        <label for="value">Temps de concervation de la video</label>
-        <input required type="number" name="value" value="{{ KEEPING_TIME }}" />
-        <input type="submit" value="Mettre à jour" />
-    </form>
+  <div class="info">
+    <small>Voici les options qui vous permettent de pas aller toucher un fichier de config</small>
+  </div>
 
-    <form action="/admin/option/GMAIL_ADDR" method="POST">
-        <label for="value">Adresse de votre compte Gmail</label>
-        <input required type="email" name="value" value="{{ GMAIL_ADDR }}" />
-        <input type="submit" value="Mettre à jour" />
-    </form>
+    <div class="form-label-group" data-children-count="1">
+        <input type="number" name="MAX_DURING" id="MAX_DURING" class="form-control" value="{{ MAX_DURING }}" placeholder="Nombre de traitements simultanés" required="" autofocus="">
+        <label for="MAX_DURING">Nombre de traitements simultanés</label>
+    </div>
 
-    <form action="/admin/option/GMAIL_PWD" method="POST">
-        <label for="value">Mot de passe de votre compte Gmail</label>
-        <input required type="password" name="value" />
-        <input type="submit" value="Mettre à jour" />
-    </form>
+    <div class="form-label-group" data-children-count="1">
+        <input type="number" name="MAX_DURING_PREVIEW" id="MAX_DURING_PREVIEW" class="form-control" value="{{ MAX_DURING_PREVIEW }}" placeholder="Nombre de traitements simultanés" required="" autofocus="">
+        <label for="MAX_DURING_PREVIEW">Nombre de traitements simultanés pour les previews</label>
+    </div>
 
-    <form action="/admin/option/GEN_PWD" method="POST">
-        <label for="value">Mot de passe de l'instance (vide pour aucun)</label>
-        <input required type="text" name="value" value="{{ GEN_PWD }}" />
-        <input type="submit" value="Mettre à jour" />
-    </form>
+    <div class="form-label-group" data-children-count="1">
+        <input type="number" name="KEEPING_TIME" id="KEEPING_TIME" class="form-control" value="{{ KEEPING_TIME }}" placeholder="Délai (en heure) pour télécharger le fichier" required="" autofocus="">
+        <label for="KEEPING_TIME">Délai (en heure) pour télécharger le fichier</label>
+    </div>
 
-    <form action="/admin/option/API_PWD" method="POST">
-        <label for="value">Mot de passe de l'API (obligatoire)</label>
-        <input required type="text" name="value" value="{{ API_PWD }}" />
-        <input type="submit" value="Mettre à jour" />
-    </form>
+    <div class="form-label-group" data-children-count="1">
+        <input type="email" name="GMAIL_ADDR" id="GMAIL_ADDR" class="form-control" value="{{ GMAIL_ADDR }}" placeholder="Adresse Gmail de votre bot" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-6">
+        <label for="GMAIL_ADDR">Adresse Gmail de votre site</label>
+    </div>
 
+    <div class="form-label-group" data-children-count="1">
+        <input type="text" name="GMAIL_PWD" id="GMAIL_PWD" value="{{ GMAIL_PWD }}"class="form-control" placeholder="Mot de passe du compte Gmail votre bot" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-2">
+        <label for="GMAIL_PWD">Mot de passe du compte Gmail votre site</label>
+    </div>
+
+    <div class="form-label-group" data-children-count="1">
+        <input type="text" name="GEN_PWD" id="GEN_PWD" value="{{ GEN_PWD }}" class="form-control" placeholder="Mot de passe de l'instance (facultatif)" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-3">
+        <label for="GEN_PWD">Mot de passe de l'instance (facultatif)</label>
+    </div>
+
+    <div class="form-label-group" data-children-count="1">
+        <input type="text" name="API_PWD" id="API_PWD" value="{{ API_PWD }}"class="form-control" placeholder="Mot de passe de l'API" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
+        <label for="API_PWD">Mot de passe de l'API</label>
+    </div>
+
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Sauvegarder</button>
+
+    </form>
 </div>
         <script src="/static/admin.js"></script>
 </body>
