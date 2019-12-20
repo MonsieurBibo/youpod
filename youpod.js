@@ -50,15 +50,6 @@ app.use(session({
 
 var csrfProtection = csurf()
 
-// error handler
-app.use(function (err, req, res, next) {
-  if (err.code !== 'EBADCSRFTOKEN') return next(err)
-
-  // handle CSRF token errors here
-  res.status(403)
-  res.send("Bad CSRF")
-})
-
 //Reprise des générations en cas d'erreur
 flush();
 setInterval(flush, 1000 * 60 * 15);
@@ -1261,6 +1252,21 @@ function getOption(option, cb) {
     cb(option.value)
   })
 }
+
+// error handler
+app.use(function (err, req, res, next) {
+  if (err.code !== 'EBADCSRFTOKEN') return next(err)
+
+  // handle CSRF token errors here
+  template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
+      
+  var render_object = {
+    "err_message": "Vous avec un mauvais CSRF token, merci de recharger la page avant de soummetre à nouveau ce formulaire!"
+  }
+
+  res.setHeader("content-type", "text/html");
+  res.send(mustache.render(template, render_object))
+})
 
 //Ouverture du serveur Web sur le port définit dans les variables d'environnement
 app.listen(process.env.PORT, () => console.log(`Serveur lancé sur le port ${process.env.PORT}`))
