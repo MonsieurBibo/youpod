@@ -22,7 +22,6 @@ var transporter;
 
 getOption("GMAIL_ADDR", (GMAIL_ADDR)=> {
   getOption("GMAIL_PWD", (GMAIL_PWD) => {
-    console.log("'" + GMAIL_ADDR + "' '" + GMAIL_PWD + "'")
     transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
