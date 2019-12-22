@@ -10,7 +10,17 @@ En réalité, ce n'est pas très compliqué : Il suffit de prendre l'audio, et u
 
 On a quand même ajouté une petite boucle vidéo derrière pour que ça ressemble un peu plus à quelque chose. 
 
-Et c'est à partir de [ce tuto d'Alliés Numériques](https://alliesnumeriques.org/tutoriels/publier-votre-podcast-sur-youtube-la-methode-classe-avec-ffmpeg/) écrit par Phil, que la première version est née...
+[![Demo](https://img.youtube.com/vi/Lpa5UtjI9NE/0.jpg)](https://www.youtube.com/watch?v=Lpa5UtjI9NE)
+
+Source : https://robotsettondeuses.lepodcast.fr/
+
+
+
+[![Demo](https://img.youtube.com/vi/H5IUxtKbapI/0.jpg)](https://www.youtube.com/watch?v=H5IUxtKbapI)
+
+Source : https://aspacemr.lepodcast.fr/
+
+L'idée de réaliser cet outil vient de [ce tuto d'Alliés Numériques](https://alliesnumeriques.org/tutoriels/publier-votre-podcast-sur-youtube-la-methode-classe-avec-ffmpeg/).
 
 
 ## Installation
@@ -31,22 +41,21 @@ npm install
 
 (Sur Windows la commande cd ne marchera pas, rendez vous simplement dans le dossier téléchargé, cliquez sur la barre d'adresse, écrivez `cmd` et vous aurez un terminal dans le bon dossier pour lancer `npm install`)
 
-Ensuite il est très important de se rendre dans le fichier `/youpod/config.json` ainsi généré, qui contiendra les informations essentielles à l'installation de votre site web.
+Ensuite il est très important de se rendre dans le fichier `/youpod/.env` ainsi généré, qui contiendra les informations essentielles à l'installation de votre site web.
 
-```JSON
-{
-    "port": 5674, //Le port de votre serveur
-    "max_during": 1, //Le nombre de vidéos qui seront rendus en même temps
-    "max_during_preview": 1, //Le nombre de preview pour les réseaux sociaux qui seront rendus en même temps
-    "keeping_time": 12, //La durée au bout de laquelle les vidéos seront supprimés (en heure)
-    "host": "http://localhost:5674", //L'adresse à laquelle on pourra accèder à votre site
-    "mail": "machin@gmail.com", //L'adresse email de votre bot
-    "password": "123456", //Le mot de passe du compte Gmail de votre bot
-    "export_folder": "./video", //Le dossier où seront sauvegardés les vidéos
-    "gen_pwd": "123456", //Le mot de passe pour accèder au site (vide pour désactiver)
-    "api_pwd": "123456", //Le mot de passe d'accès à l'API
-    "cookie_secret": "IDK" //Le mot de passe secret pour les cookies
-}
+```.env
+PORT=5674                       # Le port de votre serveur
+MAX_DURING=1                    # Le nombre de vidéos qui seront rendus en même temps
+MAX_DURIN_PREVIEW=1             # Le nombre de preview pour les réseaux sociaux qui seront rendus en même temps
+KEEPING_TIME=12                 # La durée au bout de laquelle les vidéos seront supprimés (en heure)
+HOST=http://localhost:5674      # L'adresse à laquelle on pourra accèder à votre site
+GMAIL_ADDR=someone@example.com  # L'adresse email de votre bot
+GMAIL_PWD=123456                # Le mot de passe du compte Gmail de votre bot
+EXPORT_FOLDER=./video           # Le dossier où seront sauvegardés les vidéos
+GEN_PWD=                        # Le mot de passe pour accèder au site (vide pour désactiver)
+API_PWD=123456                  # Le mot de passe d'accès à l'API
+ADMIN_PWD=123456                # Le mot de passe du dashboard d'administration
+COOKIE_SECRET=IDK               # Le mot de passe secret pour les cookies
 ```
 
 Pour plus d'information à propos de comment configurer votre compte email, allez voir dans [cet article du Wiki](https://github.com/Bigaston/youpod/wiki/Configurer-son-compte-mail) !

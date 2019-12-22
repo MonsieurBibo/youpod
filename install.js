@@ -1,59 +1,36 @@
 const fs = require("fs")
 const path = require("path")
-const sq = require('sqlite3');
+const db = require(__dirname + "/models/index.js")
 
 console.log("Création des fichiers de base")
 
-if (!fs.existsSync(path.join(__dirname, "/config.json"))) {
-    fs.writeFileSync(path.join(__dirname, "/config.json"), `{
-        "port": 5674,
-        "max_during": 1,
-        "max_during_preview": 1,
-        "keeping_time": 12,
-        "host": "http://localhost:5674",
-        "mail": "youpod@example.com",
-        "password": "your_password",
-        "export_folder": "./video/",
-        "gen_pwd": "",
-        "api_pwd": "123456",
-        "cookie_secret": "IDK"
-    }`)
+if (!fs.existsSync(path.join(__dirname, "/.env"))) {
+    fs.writeFileSync(path.join(__dirname, ".env"), `
+PORT=5674
+HOST=http://localhost:5674
+EXPORT_FOLDER=./video
+ADMIN_PWD=123456
+COOKIE_SECRET=IDK`)
 }
 
-if (!fs.existsSync(path.join(__dirname, "/base.db"))) {
-    sq.verbose();
-    var db = new sq.Database(__dirname + "/base.db");
-    db.run(`CREATE TABLE "video" (
-        "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        "email"	TEXT NOT NULL,
-        "rss"	TEXT NOT NULL,
-        "guid"	TEXT,
-        "template"	TEXT,
-        "access_token"	TEXT NOT NULL,
-        "end_timestamp"	TEXT,
-        "status"	TEXT NOT NULL DEFAULT 'waiting' CHECK(status in ("waiting","during","finished","deleted","error")),
-        "font"	TEXT,
-        "epTitle"	TEXT,
-        "epImg"	TEXT,
-        "podTitle"	TEXT,
-        "podSub"	TEXT,
-        "audioURL"	TEXT
-    )`)
-
-    db.run(`CREATE TABLE "preview" (
-        "id"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        "email"	TEXT NOT NULL,
-        "epTitle"	TEXT NOT NULL,
-        "podTitle"	TEXT NOT NULL,
-        "imgLink"	TEXT NOT NULL,
-        "audioLink"	TEXT NOT NULL,
-        "color"	TEXT CHECK(color in ('noir','gris','blanc','bleu','vert','jaune','orange','rouge','violet')),
-        "startTime"	TEXT,
-        "end_timestamp"	INTEGER,
-        "access_token"	TEXT,
-        "status"	TEXT DEFAULT "waiting" CHECK(status in ("waiting","during","finished","deleted","error"))
-    )`)
-}
+db.sequelize.sync().then(()=> {
+    console.log("Création des tables réussies!")
+    db.Option.findOrCreate({where: {key: 'MAX_DURING'}, defaults: {value: '1'}}).then(() => {
+        db.Option.findOrCreate({where: {key: 'MAX_DURING_PREVIEW'}, defaults: {value: '1'}}).then(() => {
+            db.Option.findOrCreate({where: {key: 'KEEPING_TIME'}, defaults: {value: '12'}}).then(() => {
+                db.Option.findOrCreate({where: {key: 'GMAIL_ADDR'}, defaults: {value: 'michel@example.com'}}).then(() => {
+                    db.Option.findOrCreate({where: {key: 'GMAIL_PWD'}, defaults: {value: '123456'}}).then(() => {
+                        db.Option.findOrCreate({where: {key: 'GEN_PWD'}, defaults: {value: ''}}).then(() => {
+                            db.Option.findOrCreate({where: {key: 'API_PWD'}, defaults: {value: '123456'}})
+                        })
+                    })
+                })
+            })
+        })
+    })
+}).catch(error => {
+    console.log("Erreur lors de la création des tables!")
+})
 
 if(!fs.existsSync(path.join(__dirname, "/video"))) {
     fs.mkdirSync(path.join(__dirname, "/video"))
