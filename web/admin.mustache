@@ -24,18 +24,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 
-<!-- conditionnal fields -->
-<script src="./static/conditional-field.min.js"></script>
-<script type="text/javascript">
-new ConditionalField({
-  control: '.payment-checkbox',
-  visibility: {
-    'off': '.credit',
-    'on': '.check'
-  }
-});
-
-</script>
 
 <style>
    .activity {
@@ -46,29 +34,7 @@ new ConditionalField({
   margin-bottom: 1rem;
 	}
 
-.blink {
-    font-size : 200%;
-    color : red;
-    margin-right: 0.5rem;
-      animation: blink 2s steps(5, start) infinite;
-      -webkit-animation: blink 1s steps(5, start) infinite;
-    }
-    @keyframes blink {
-      to {
-        visibility: hidden;
-      }
-    }
-    @-webkit-keyframes blink {
-      to {
-        visibility: hidden;
-      }
-    }
-.noblink {
-    font-size : 200%;
-    color : grey;
-    margin-right: 0.5rem;
-   
-    }
+
       .bd-placeholder-img {
         font-size: 1.125rem;
         text-anchor: middle;
@@ -90,9 +56,7 @@ new ConditionalField({
     .footer {
       font-size: 80%;
     }
-    .switch{
-      margin-left: 19%;
-    }
+   
     .font-test{
     background-color: white;
     margin-top: 1rem;
@@ -102,9 +66,7 @@ new ConditionalField({
     border-radius: 0.25rem;
 	}
 
-
-
-	.apply-font{
+.apply-font{
 		padding: 0.5rem;
 		margin-block-end: 0;
 	}
@@ -136,24 +98,24 @@ new ConditionalField({
   </div>  
  
   <div class="row">
-    <div class="col-sm iconsadmin">
-      <img class="mb-4" src="./static/generated.png" alt="generated" width="40" height="40"><br>
+    <div class="col iconsadmin">
+      <img src="./static/generated.png" alt="generated" width="40" height="40"><br>
      <b>{{ nb_gen_video }}</b><br>
       <small>vidéos générées</small>
     </div>
-    <div class="col-sm iconsadmin">
-      <img class="mb-4" src="./static/downloaded.png" alt="downloaded" width="40" height="40"><br>
+    <div class="col iconsadmin">
+      <img src="./static/downloaded.png" alt="downloaded" width="40" height="40"><br>
      <b>{{ nb_save_video }}</b> Vidéos<br>
       <small>Stockées</small><br>
       <small><button onclick="flushVideo()">Vider</button></small>      
     </div>
-    <div class="col-sm iconsadmin">
-      <img class="mb-4" src="./static/storage.png" alt="storage" width="40" height="40"><br>
+    <div class="col iconsadmin">
+      <img src="./static/storage.png" alt="storage" width="40" height="40"><br>
      <b>{{ size_export_folder }}</b><br>
       <small>stockés sur le serveur</small>
     </div>
-    <div class="col-sm iconsadmin">
-      <img class="mb-4" src="./static/feed.png" alt="generated" width="40" height="40"><br>
+    <div class="col iconsadmin">
+      <img  src="./static/feed.png" alt="generated" width="40" height="40"><br>
      <b>{{ nb_rss_feed }}</b><br>
       <small>flux différents</small>
     </div>
@@ -163,15 +125,15 @@ new ConditionalField({
   </div>
 
   <div class="row waiting">
-    <div class="col-sm-2 "></div>
-    <div class="col-sm-2 ">
+    <div class="col-2 "></div>
+    <div class="col-2 ">
      <img class="mb" src="./static/waiting.png" alt="waiting" width="40" height="40"><br>
     </div>
-    <div class="col-sm-6 ">
+    <div class="col-6 ">
      <b>{{ nb_waiting_video }}</b> Vidéos en attente<br>
      <small><button onclick="flushList()">Vider</button><br>
     </div>
-    <div class="col-sm-2 "></div>
+    <div class="col-2 "></div>
 
   </div>
   <br><br>
