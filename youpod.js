@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const fs = require('fs');
 const path = require("path");
 const mustache = require("mustache");
@@ -15,8 +17,6 @@ const getMP3Duration = require('get-mp3-duration')
 const bdd = require(__dirname + "/models/index.js")
 const getSize = require('get-folder-size');
 const Op = bdd.Sequelize.Op;
-
-require('dotenv').config()
 
 var transporter;
 
