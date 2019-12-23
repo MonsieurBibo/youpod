@@ -18,21 +18,6 @@ const Op = bdd.Sequelize.Op;
 
 require('dotenv').config()
 
-var transporter;
-
-getOption("GMAIL_ADDR", (GMAIL_ADDR)=> {
-  getOption("GMAIL_PWD", (GMAIL_PWD) => {
-    transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-           user: GMAIL_ADDR,
-           pass: GMAIL_PWD
-         }
-    });
-  })
-})
-
-
 var app = express()
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
@@ -1270,13 +1255,25 @@ function sendMailPreview(id) {
         subject: `Vidéo générée sur Youpod!`, // Subject line
         html: mustache.render(template, renderObj)
       };
+
+      getOption("GMAIL_ADDR", (GMAIL_ADDR)=> {
+        getOption("GMAIL_PWD", (GMAIL_PWD) => {
+          transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: GMAIL_ADDR,
+                pass: GMAIL_PWD
+              }
+          });
+
+          transporter.sendMail(mailOptions, function (err, info) {
+            if(err) return console.log(err)
+          });
       
-      transporter.sendMail(mailOptions, function (err, info) {
-        if(err) return console.log(err)
-      });
-  
-      preview.email = "deleted"
-      preview.save();
+          preview.email = "deleted"
+          preview.save();
+        })
+      })
     })
   })
 }
@@ -1307,13 +1304,27 @@ function sendMail(id, ep_title) {
         subject: `Vidéo générée sur Youpod : ${ep_title}`, // Subject line
         html: mustache.render(template, renderObj)
       };
+
+      getOption("GMAIL_ADDR", (GMAIL_ADDR)=> {
+        getOption("GMAIL_PWD", (GMAIL_PWD) => {
+          transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: GMAIL_ADDR,
+                pass: GMAIL_PWD
+              }
+          });
+
+          transporter.sendMail(mailOptions, function (err, info) {
+            if(err) return console.log(err)
+          });
       
-      transporter.sendMail(mailOptions, function (err, info) {
-        if(err) return console.log(err)
-      });
-  
-      video.email = "deleted"
-      video.save()
+          video.email = "deleted"
+          video.save()
+        })
+      })
+      
+
     })
   })
 }
