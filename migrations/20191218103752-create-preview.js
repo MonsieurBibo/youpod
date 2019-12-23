@@ -56,7 +56,7 @@ module.exports = {
         }
       },
       priority: {
-        type: DataTypes.INTEGER,
+        type: Sequelize.INTEGER,
         allowNull:false,
         defaultValue: 0
       },
@@ -68,8 +68,8 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE
       },
-      updatedAt: DataTypes.DATE,
-      createdAt: DataTypes.DATE
+      updatedAt: Sequelize.DATE,
+      createdAt: Sequelize.DATE
     });
   },
   down: (queryInterface, Sequelize) => {
