@@ -622,6 +622,7 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
     if (GEN_PWD == "") {
       if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
         checkIfExistCustom(req, res, () => {
+          console.log(req.body.imgURL)
           bdd.Video.create({
             email: req.body.email,
             rss: "__custom__",
@@ -672,7 +673,7 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
 })
 
 function checkIfExistCustom(req, res, cb) {
-  bdd.Video.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.epImg, audioURL: req.body.audioURL, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
+  bdd.Video.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.imgURL, audioURL: req.body.audioURL, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
     if (video == null) {
       cb();
     } else {

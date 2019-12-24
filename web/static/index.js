@@ -1,6 +1,5 @@
 const parser = new DOMParser();
 
-
 function fetchFeed() {
     sel = document.getElementById("selectEp")
     sel.innerHTML = `<option selected value="__last__">Dernier épisode</option>`
