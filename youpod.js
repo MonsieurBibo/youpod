@@ -1288,14 +1288,16 @@ function sendMail(id, ep_title) {
           "rss_link": video.rss,
           "keeping_time": KEEPING_TIME,
           "epTitle": ep_title,
-          "video_link": process.env.HOST + "/download/" + id + "?token=" + video.access_token
+          "video_link": process.env.HOST + "/download/" + id + "?token=" + video.access_token,
+          "website_url": process.env.HOST
         }
       } else {
         template = fs.readFileSync(path.join(__dirname, "/web/mail_custom.mustache"), "utf8")
         renderObj = {
           "ep_title": video.epTitle,
           "keeping_time": KEEPING_TIME,
-          "video_link": process.env.HOST + "/download/" + id + "?token=" + video.access_token
+          "video_link": process.env.HOST + "/download/" + id + "?token=" + video.access_token,
+          "website_url": process.env.HOST
         }
       }
 
