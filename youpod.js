@@ -160,10 +160,10 @@ app.post("/admin/option", (req, res) => {
         where: {
           key: k
         }
-      }).then(() => {
-        res.redirect("/admin")
       })
     })
+
+    res.redirect("/admin")
   } else {
     res.status(403)
   }
