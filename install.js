@@ -44,4 +44,4 @@ if (!fs.existsSync(path.join(__dirname, "/tmp"))) {
     fs.mkdirSync(path.join(__dirname, "/tmp"))
 }
 console.log("L'instalation est terminée.")
-console.log("Pensez aussi à éditer vos informations dans config.json")
+console.log("Pensez aussi à éditer vos informations dans .env")
