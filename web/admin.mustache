@@ -92,6 +92,7 @@
     <img class="mb-4" src="./static/logo.png" alt="YouPod" width="300" height="69">
   
   <h1> Panneau d'administration</h1>
+  <p>Youpod version {{ youpod_version }}</p>
   </div>
   <div class="activity lead">
     <h2>Statistiques</h2>
@@ -191,6 +192,12 @@
     <div class="form-label-group" data-children-count="1">
         <input type="text" name="API_PWD" id="API_PWD" value="{{ API_PWD }}"class="form-control" placeholder="Mot de passe de l'API" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
         <label for="API_PWD">Mot de passe de l'API</label>
+    </div>
+
+    <div class="form-label-group" data-children-count="1">
+        <input type="text" name="GOOGLE_FONT_KEY" id="API_PWD" value="{{ GOOGLE_FONT_KEY }}"class="form-control" placeholder="Mot de passe de l'API" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
+        <label for="GOOGLE_FONT_KEY">Mot de passe de l'API Google Font</label>
+        <small class="form-text text-muted"><a href="https://developers.google.com/fonts/docs/developer_api#APIKey">Récupérer votre clé</a></small>
     </div>
 
     <button class="btn btn-lg btn-primary btn-block" onclick="submitForm()">Sauvegarder</button>

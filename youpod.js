@@ -15,7 +15,7 @@ const getMP3Duration = require('get-mp3-duration')
 const bdd = require(__dirname + "/models/index.js")
 const getSize = require('get-folder-size');
 const Op = bdd.Sequelize.Op;
-const {google} = require('googleapis');
+const package = require("./package.json")
 
 require('dotenv').config()
 
@@ -238,23 +238,28 @@ app.get("/admin", (req, res) => {
                       getOption("GMAIL_PWD", (GMAIL_PWD) => {
                         getOption("GEN_PWD", (GEN_PWD) => {
                           getOption("API_PWD", (API_PWD) => {
-                            var render_object = {
-                              nb_gen_video: nb_gen_video,
-                              nb_save_video: nb_save_video,
-                              nb_waiting_video: nb_waiting_video,
-                              nb_rss_feed: nb_rss_feed,
-                              size_export_folder: size_export_folder,
-                              MAX_DURING: MAX_DURING,
-                              MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
-                              KEEPING_TIME: KEEPING_TIME,
-                              GMAIL_ADDR: GMAIL_ADDR,
-                              GMAIL_PWD: GMAIL_PWD,
-                              GEN_PWD: GEN_PWD,
-                              API_PWD: API_PWD
-                            }
-                          
-                            res.setHeader("content-type", "text/html");
-                            res.send(mustache.render(template, render_object))
+                            getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
+                              var render_object = {
+                                nb_gen_video: nb_gen_video,
+                                nb_save_video: nb_save_video,
+                                nb_waiting_video: nb_waiting_video,
+                                nb_rss_feed: nb_rss_feed,
+                                size_export_folder: size_export_folder,
+                                MAX_DURING: MAX_DURING,
+                                MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
+                                KEEPING_TIME: KEEPING_TIME,
+                                GMAIL_ADDR: GMAIL_ADDR,
+                                GMAIL_PWD: GMAIL_PWD,
+                                GEN_PWD: GEN_PWD,
+                                API_PWD: API_PWD,
+                                GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
+                                youpod_version: package.version
+                              }
+                            
+                              res.setHeader("content-type", "text/html");
+                              res.send(mustache.render(template, render_object))
+                            })
+
                           })
                         })
                       })
@@ -350,26 +355,8 @@ app.get("/preview", csrfProtection, (req, res) => {
 app.get("/custom", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => {
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
-      if (GEN_PWD == "") {
-        bdd.Video.count({
-          where: {
-            [Op.or]: [{status: "waiting"}, {status: "during"}]
-          }
-        }).then((nb) => {
-          template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
-    
-          var render_object = {
-            "waiting_list": nb,
-            "keeping_time": KEEPING_TIME,
-            "csrfToken": req.csrfToken,
-            "yt_logged": req.session.google_code != undefined ? true : false
-          }
-        
-          res.setHeader("content-type", "text/html");
-          res.send(mustache.render(template, render_object))
-        })
-      } else {
-        if (req.session.logged != undefined) {
+      getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
+        if (GEN_PWD == "") {
           bdd.Video.count({
             where: {
               [Op.or]: [{status: "waiting"}, {status: "during"}]
@@ -380,18 +367,40 @@ app.get("/custom", csrfProtection, (req, res) => {
             var render_object = {
               "waiting_list": nb,
               "keeping_time": KEEPING_TIME,
-              "need_pass": GEN_PWD!="",
               "csrfToken": req.csrfToken,
-              "yt_logged": req.session.google_code != undefined ? true : false
+              "yt_logged": req.session.google_code != undefined ? true : false,
+              "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
             }
           
             res.setHeader("content-type", "text/html");
             res.send(mustache.render(template, render_object))
           })
         } else {
-          res.redirect("/login?return=custom")
+          if (req.session.logged != undefined) {
+            bdd.Video.count({
+              where: {
+                [Op.or]: [{status: "waiting"}, {status: "during"}]
+              }
+            }).then((nb) => {
+              template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
+        
+              var render_object = {
+                "waiting_list": nb,
+                "keeping_time": KEEPING_TIME,
+                "need_pass": GEN_PWD!="",
+                "csrfToken": req.csrfToken,
+                "yt_logged": req.session.google_code != undefined ? true : false,
+                "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
+              }
+            
+              res.setHeader("content-type", "text/html");
+              res.send(mustache.render(template, render_object))
+            })
+          } else {
+            res.redirect("/login?return=custom")
+          }
         }
-      }
+      })
     })
   })
 })
@@ -399,27 +408,8 @@ app.get("/custom", csrfProtection, (req, res) => {
 app.get("/", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => {
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
-      if (GEN_PWD == "") {
-        bdd.Video.count({
-          where: {
-            [Op.or]: [{status: "waiting"}, {status: "during"}]
-          }
-        }).then((nb) => {
-          template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
-      
-          var render_object = {
-            "waiting_list": nb,
-            "keeping_time": KEEPING_TIME,
-            "need_pass": GEN_PWD!="",
-            "csrfToken": req.csrfToken,
-            "yt_logged": req.session.google_code != undefined ? true : false
-          }
-        
-          res.setHeader("content-type", "text/html");
-          res.send(mustache.render(template, render_object))
-        })
-      } else {
-        if (req.session.logged != undefined) {
+      getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
+        if (GEN_PWD == "") {
           bdd.Video.count({
             where: {
               [Op.or]: [{status: "waiting"}, {status: "during"}]
@@ -432,16 +422,39 @@ app.get("/", csrfProtection, (req, res) => {
               "keeping_time": KEEPING_TIME,
               "need_pass": GEN_PWD!="",
               "csrfToken": req.csrfToken,
-              "yt_logged": req.session.google_code != undefined ? true : false
+              "yt_logged": req.session.google_code != undefined ? true : false,
+              "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
             }
           
             res.setHeader("content-type", "text/html");
             res.send(mustache.render(template, render_object))
           })
         } else {
-          res.redirect("/login")
+          if (req.session.logged != undefined) {
+            bdd.Video.count({
+              where: {
+                [Op.or]: [{status: "waiting"}, {status: "during"}]
+              }
+            }).then((nb) => {
+              template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
+          
+              var render_object = {
+                "waiting_list": nb,
+                "keeping_time": KEEPING_TIME,
+                "need_pass": GEN_PWD!="",
+                "csrfToken": req.csrfToken,
+                "yt_logged": req.session.google_code != undefined ? true : false,
+                "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
+              }
+            
+              res.setHeader("content-type", "text/html");
+              res.send(mustache.render(template, render_object))
+            })
+          } else {
+            res.redirect("/login")
+          }
         }
-      }
+      })
     })
    })
 })

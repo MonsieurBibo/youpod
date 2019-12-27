@@ -21,7 +21,9 @@ db.sequelize.sync().then(()=> {
                 db.Option.findOrCreate({where: {key: 'GMAIL_ADDR'}, defaults: {value: 'michel@example.com'}}).then(() => {
                     db.Option.findOrCreate({where: {key: 'GMAIL_PWD'}, defaults: {value: '123456'}}).then(() => {
                         db.Option.findOrCreate({where: {key: 'GEN_PWD'}, defaults: {value: ''}}).then(() => {
-                            db.Option.findOrCreate({where: {key: 'API_PWD'}, defaults: {value: '123456'}})
+                            db.Option.findOrCreate({where: {key: 'API_PWD'}, defaults: {value: '123456'}}).then(() => {
+                                db.Option.findOrCreate({where: {key: 'GOOGLE_FONT_KEY'}, defaults: {value: ''}})
+                            })
                         })
                     })
                 })

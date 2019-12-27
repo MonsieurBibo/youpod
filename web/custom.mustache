@@ -179,7 +179,7 @@
 <script>
   var font_choice = document.getElementById("font-choice");
   var fontPicker = new FontPicker(
-    "AIzaSyC3pZS6l_aZ4iU3c71t65dE6Cz1-THx0Fk", // Google API key
+    "{{ GOOGLE_FONT_KEY }}", // Google API key
     font_choice.value, // Default font
     { limit: 100 }, // Additional options
   );
