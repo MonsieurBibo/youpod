@@ -66,6 +66,9 @@ module.exports = {
           isUrl: true
         }
       },
+      googleToken: {
+        type: Sequelize.STRING
+      },
       updatedAt: Sequelize.DATE,
       createdAt: Sequelize.DATE
     });

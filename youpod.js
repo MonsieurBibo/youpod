@@ -15,8 +15,11 @@ const getMP3Duration = require('get-mp3-duration')
 const bdd = require(__dirname + "/models/index.js")
 const getSize = require('get-folder-size');
 const Op = bdd.Sequelize.Op;
+const {google} = require('googleapis');
 
 require('dotenv').config()
+
+const yt = require("./youtube.js")
 
 var app = express()
 
@@ -40,6 +43,17 @@ setInterval(flush, 1000 * 60 * 15);
 restartGeneration();
  
 var parser = new Parser();
+
+app.get("/yt/login", (req, res) => {
+  res.redirect(yt.google_url)
+})
+
+app.get("/yt/redirect", (req, res) => {
+  req.session.google_code = req.query.code
+  req.session.save((err) => {
+    res.redirect("/")
+  })
+})
 
 app.get("/static/:file", (req, res) => {
   res.sendFile(path.join(__dirname, "/web/static/", req.params.file))
@@ -347,7 +361,8 @@ app.get("/custom", csrfProtection, (req, res) => {
           var render_object = {
             "waiting_list": nb,
             "keeping_time": KEEPING_TIME,
-            "csrfToken": req.csrfToken
+            "csrfToken": req.csrfToken,
+            "yt_logged": req.session.google_code != undefined ? true : false
           }
         
           res.setHeader("content-type", "text/html");
@@ -366,7 +381,8 @@ app.get("/custom", csrfProtection, (req, res) => {
               "waiting_list": nb,
               "keeping_time": KEEPING_TIME,
               "need_pass": GEN_PWD!="",
-              "csrfToken": req.csrfToken
+              "csrfToken": req.csrfToken,
+              "yt_logged": req.session.google_code != undefined ? true : false
             }
           
             res.setHeader("content-type", "text/html");
@@ -395,7 +411,8 @@ app.get("/", csrfProtection, (req, res) => {
             "waiting_list": nb,
             "keeping_time": KEEPING_TIME,
             "need_pass": GEN_PWD!="",
-            "csrfToken": req.csrfToken
+            "csrfToken": req.csrfToken,
+            "yt_logged": req.session.google_code != undefined ? true : false
           }
         
           res.setHeader("content-type", "text/html");
@@ -414,7 +431,8 @@ app.get("/", csrfProtection, (req, res) => {
               "waiting_list": nb,
               "keeping_time": KEEPING_TIME,
               "need_pass": GEN_PWD!="",
-              "csrfToken": req.csrfToken
+              "csrfToken": req.csrfToken,
+              "yt_logged": req.session.google_code != undefined ? true : false
             }
           
             res.setHeader("content-type", "text/html");
@@ -493,10 +511,14 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                     guid: guid,
                     template: req.body.template,
                     access_token: randtoken.generate(32),
-                    font:req.body["font-choice"]
+                    font:req.body["font-choice"],
+                    googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
                   }).then((video) => {
-                    initNewGeneration();
-                    res.sendFile(path.join(__dirname, "/web/done.html"))
+                      req.session.google_code = undefined
+                      req.session.save((err) => {
+                        initNewGeneration();
+                        res.sendFile(path.join(__dirname, "/web/done.html"))
+                      })
                   })
                 })
               })
@@ -508,10 +530,14 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                   guid: req.body.selectEp,
                   template: req.body.template,
                   access_token: randtoken.generate(32),
-                  font:req.body["font-choice"]
+                  font:req.body["font-choice"],
+                  googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
                 }).then((video) => {
-                  initNewGeneration();
-                  res.sendFile(path.join(__dirname, "/web/done.html"))
+                  req.session.google_code = undefined
+                  req.session.save((err) => {
+                    initNewGeneration();
+                    res.sendFile(path.join(__dirname, "/web/done.html"))
+                  })
                 })
               })
             }
@@ -545,8 +571,11 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                       access_token: randtoken.generate(32),
                       font:req.body["font-choice"]
                     }).then((video) => {
-                      initNewGeneration();
-                      res.sendFile(path.join(__dirname, "/web/done.html"))
+                      req.session.google_code = undefined
+                      req.session.save((err) => {
+                        initNewGeneration();
+                        res.sendFile(path.join(__dirname, "/web/done.html"))
+                      })
                     })
                   })
                 })
@@ -560,8 +589,11 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                     access_token: randtoken.generate(32),
                     font:req.body["font-choice"]
                   }).then((video) => {
-                    initNewGeneration();
-                    res.sendFile(path.join(__dirname, "/web/done.html"))
+                    req.session.google_code = undefined
+                    req.session.save((err) => {
+                      initNewGeneration();
+                      res.sendFile(path.join(__dirname, "/web/done.html"))
+                    })
                   })
                 })
               }
@@ -633,10 +665,14 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
             podTitle: req.body.podTitle,
             podSub: req.body.podSub,
             audioURL: req.body.audioURL,
-            font: req.body["font-choice"]
+            font: req.body["font-choice"],
+            googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
           }).then((video) => {
-            initNewGeneration();
-            res.sendFile(path.join(__dirname, "/web/done.html"))  
+            req.session.google_code = undefined
+            req.session.save((err) => {
+              initNewGeneration();
+              res.sendFile(path.join(__dirname, "/web/done.html"))
+            })
           })
         })
       } else {
@@ -656,10 +692,14 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
               podTitle: req.body.podTitle,
               podSub: req.body.podSub,
               audioURL: req.body.audioURL,
-              font: req.body["font-choice"]
+              font: req.body["font-choice"],
+              googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
             }).then((video) => {
-              initNewGeneration();
-              res.sendFile(path.join(__dirname, "/web/done.html"))  
+              req.session.google_code = undefined
+              req.session.save((err) => {
+                initNewGeneration();
+                res.sendFile(path.join(__dirname, "/web/done.html"))
+              })
             })
           })
         } else {
@@ -908,13 +948,13 @@ function restartGeneration() {
 }
 
 function flush() {
-  bdd.Video.findAll({where: {status: "finished"}}).then((videos) => {
-    if (videos.length >=1) {
-      for (i = 0; i < videos.length; i++) {
-        time = Date.now() - videos[i].end_timestamp
-        time = time / (1000 * 60 * 60);
-    
-        getOption("KEEPING_TIME", (KEEPING_TIME) => {
+  getOption("KEEPING_TIME", (KEEPING_TIME) => {
+    bdd.Video.findAll({where: {status: "finished"}}).then((videos) => {
+      if (videos.length >=1) {
+        for (i = 0; i < videos.length; i++) {
+          time = Date.now() - videos[i].end_timestamp
+          time = time / (1000 * 60 * 60);
+          
           if (time > KEEPING_TIME) {
             try {
               fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${videos[i].id}.mp4`))
@@ -926,32 +966,33 @@ function flush() {
             console.log("Flush video " + videos[i].id)
       
           }
-        })
-      }
-    }
-  })
-
-  bdd.Preview.findAll({where: {status: "finished"}}).then((previews) => {
-    if (previews.length >=1) {
-      for (i = 0; i < previews.length; i++) {
-        time = Date.now() - previews[i].end_timestamp
-        time = time / (1000 * 60 * 60);
-    
-        if (time > process.env.KEEPING_TIME) {
-          try {
-            fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${previews[i].id}.mp4`))
-          } catch (err) {
-            console.log(`Fichier preview_${previews[i].id}.mp4 déjà supprimé`)
-          }
-
-          previews[i].status = "deleted"
-          previews[i].save()
-          console.log("Flush preview " + previews[i].id)
-    
         }
       }
-    } 
+    })
+
+    bdd.Preview.findAll({where: {status: "finished"}}).then((previews) => {
+      if (previews.length >=1) {
+        for (i = 0; i < previews.length; i++) {
+          time = Date.now() - previews[i].end_timestamp
+          time = time / (1000 * 60 * 60);
+      
+          if (time > KEEPING_TIME) {
+            try {
+              fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${previews[i].id}.mp4`))
+            } catch (err) {
+              console.log(`Fichier preview_${previews[i].id}.mp4 déjà supprimé`)
+            }
+
+            previews[i].status = "deleted"
+            previews[i].save()
+            console.log("Flush preview " + previews[i].id)
+      
+          }
+        }
+      } 
+    })
   })
+  
 }
 
 function initNewGeneration() {
@@ -1322,6 +1363,11 @@ function sendMail(id, ep_title) {
             if(err) return console.log(err)
           });
       
+          if (video.googleToken != undefined) {
+            yt.upload(video.googleToken, path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${video.id}.mp4`), video)
+            video.googleToken = "deleted"
+          }
+
           video.email = "deleted"
           video.save()
         })

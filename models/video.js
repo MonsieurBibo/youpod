@@ -64,6 +64,9 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isUrl: true
       }
+    },
+    googleToken: {
+      type: DataTypes.STRING
     }
   }, {
 
