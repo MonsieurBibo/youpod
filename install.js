@@ -10,7 +10,9 @@ PORT=5674
 HOST=http://localhost:5674
 EXPORT_FOLDER=./video
 ADMIN_PWD=123456
-COOKIE_SECRET=IDK`)
+COOKIE_SECRET=IDK
+GOOGLE_ID=
+GOOGLE_SECRET=`)
 }
 
 db.sequelize.sync().then(()=> {
