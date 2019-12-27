@@ -586,7 +586,8 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                       guid: guid,
                       template: req.body.template,
                       access_token: randtoken.generate(32),
-                      font:req.body["font-choice"]
+                      font:req.body["font-choice"],
+                      googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
                     }).then((video) => {
                       req.session.google_code = undefined
                       req.session.save((err) => {
@@ -604,7 +605,8 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                     guid: req.body.selectEp,
                     template: req.body.template,
                     access_token: randtoken.generate(32),
-                    font:req.body["font-choice"]
+                    font:req.body["font-choice"],
+                    googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
                   }).then((video) => {
                     req.session.google_code = undefined
                     req.session.save((err) => {
