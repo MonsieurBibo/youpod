@@ -37,10 +37,10 @@ Voici les commandes pour faire ça :
 ```shell
 git clone https://github.com/Bigaston/youpod
 cd youpod
-npm install
+npm install --unsafe-perm=true --allow-root
 ```
 
-(Sur Windows la commande cd ne marchera pas, rendez vous simplement dans le dossier téléchargé, cliquez sur la barre d'adresse, écrivez `cmd` et vous aurez un terminal dans le bon dossier pour lancer `npm install`)
+(Sur Windows la commande cd ne marchera pas, rendez vous simplement dans le dossier téléchargé, cliquez sur la barre d'adresse, écrivez `cmd` et vous aurez un terminal dans le bon dossier pour lancer `npm install`.
 
 Ensuite il est très important de se rendre dans le fichier `/youpod/.env` ainsi généré, qui contiendra les informations essentielles à l'installation de votre site web.
 
