@@ -29,6 +29,7 @@ fetch("/admin/queue")
     .then((json) => {
         console.log(json)
         table = document.getElementById("queue")
+        table2 = document.getElementById("during")
 
         json.queue.forEach((v) => {
             row = table.insertRow()
@@ -36,6 +37,13 @@ fetch("/admin/queue")
             row.insertCell().innerHTML = v.rss != "__custom__" ? v.rss : v.title
             row.insertCell().innerHTML = v.email
             row.insertCell().innerHTML = createForm(v)
+        })
+
+        json.during.forEach((v) => {
+            row = table2.insertRow()
+            row.insertCell().innerHTML = v.id
+            row.insertCell().innerHTML = v.rss != "__custom__" ? v.rss : v.title
+            row.insertCell().innerHTML = v.email
         })
     })
 

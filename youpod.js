@@ -185,8 +185,8 @@ app.post("/admin/option", (req, res) => {
 
 app.get("/admin/queue", (req, res) => {
   if (req.session.loggin_admin != undefined) {
-    bdd.Video.findAll({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((videos) => {
-      returnObj = {queue: []}
+    bdd.Video.findAll({where: {[Op.or]: [{status: "during"}, {status: "waiting"}]}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((videos) => {
+      returnObj = {queue: [], during: []}
 
       for (i = 0; i < videos.length; i++) {
         o = {
@@ -197,7 +197,11 @@ app.get("/admin/queue", (req, res) => {
           id: videos[i].id
         }
 
-        returnObj.queue.push(o)
+        if (videos[i].status == "during") {
+          returnObj.during.push(o)
+        } else {
+          returnObj.queue.push(o)
+        }
       }
 
       res.header("Access-Control-Allow-Origin", process.env.HOST);
