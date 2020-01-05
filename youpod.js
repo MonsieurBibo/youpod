@@ -23,6 +23,10 @@ const yt = require("./youtube.js")
 
 var app = express()
 
+partials = {
+  footer: fs.readFileSync(path.join(__dirname, "/web/partials/footer.mustache"), "utf8")
+}
+
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
@@ -83,7 +87,7 @@ app.get("/login", csrfProtection, (req, res) => {
   }
 
   res.setHeader("content-type", "text/html");
-  res.send(mustache.render(template, render_object))
+  res.send(mustache.render(template, render_object, partials))
 })
 
 app.post("/admin/authenticate", csrfProtection, (req, res) => {
@@ -116,7 +120,7 @@ app.get("/admin/login", csrfProtection, (req, res) => {
   }
 
   res.setHeader("content-type", "text/html");
-  res.send(mustache.render(template, render_object))
+  res.send(mustache.render(template, render_object, partials))
 })
 
 app.post("/admin/action", (req, res) => {
@@ -271,7 +275,7 @@ app.get("/admin", (req, res) => {
                                 }
                               
                                 res.setHeader("content-type", "text/html");
-                                res.send(mustache.render(template, render_object))
+                                res.send(mustache.render(template, render_object, partials))
                               })
                             })
 
@@ -337,7 +341,7 @@ app.get("/preview", csrfProtection, (req, res) => {
           }
         
           res.setHeader("content-type", "text/html");
-          res.send(mustache.render(template, render_object))
+          res.send(mustache.render(template, render_object, partials))
         })
     
       } else {
@@ -356,7 +360,7 @@ app.get("/preview", csrfProtection, (req, res) => {
             }
           
             res.setHeader("content-type", "text/html");
-            res.send(mustache.render(template, render_object))
+            res.send(mustache.render(template, render_object, partials))
           })
         } else {
           res.redirect("/login?return=preview")
@@ -390,7 +394,7 @@ app.get("/custom", csrfProtection, (req, res) => {
               }
             
               res.setHeader("content-type", "text/html");
-              res.send(mustache.render(template, render_object))
+              res.send(mustache.render(template, render_object, partials))
             })
           } else {
             if (req.session.logged != undefined) {
@@ -412,7 +416,7 @@ app.get("/custom", csrfProtection, (req, res) => {
                 }
               
                 res.setHeader("content-type", "text/html");
-                res.send(mustache.render(template, render_object))
+                res.send(mustache.render(template, render_object, partials))
               })
             } else {
               res.redirect("/login?return=custom")
@@ -448,7 +452,7 @@ app.get("/", csrfProtection, (req, res) => {
               }
             
               res.setHeader("content-type", "text/html");
-              res.send(mustache.render(template, render_object))
+              res.send(mustache.render(template, render_object, partials))
             })
           } else {
             if (req.session.logged != undefined) {
@@ -470,7 +474,7 @@ app.get("/", csrfProtection, (req, res) => {
                 }
               
                 res.setHeader("content-type", "text/html");
-                res.send(mustache.render(template, render_object))
+                res.send(mustache.render(template, render_object, partials))
               })
             } else {
               res.redirect("/login")
