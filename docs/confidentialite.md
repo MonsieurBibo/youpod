@@ -33,4 +33,4 @@ Au niveau de la sauvegarde des données, votre code d'accès (qui doit être à 
 
 Youpod est développé par [Bigaston](https://twitter.com/Bigaston), avec l'aide de [Phil](https://twitter.com/phil_goud) et de [Pof](https://twitter.com/PofMagicfingers).
 
-L'instance principale de Youpod, [app.youpod.io](https://app.youpod.io) est hébergée sur un serveur Kimsufi soutenu par le financement de [Podshows](https://podshows.fr/);
+L'instance principale de Youpod, [app.youpod.io](https://app.youpod.io) est hébergée sur un serveur Kimsufi soutenu par le financement de [Podshows](https://podshows.fr/).
