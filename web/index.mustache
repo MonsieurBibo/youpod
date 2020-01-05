@@ -111,6 +111,12 @@
         </p>
         </div>
 
+      {{#ENABLE_YOUTUBE}}
+        {{^yt_logged}}
+          <a href="/yt/login" class="btn btn-lg btn-block btn-primary">Se connecter à Youtube</a>
+        {{/yt_logged}}<br>
+      {{/ENABLE_YOUTUBE}}
+
       <div class="form-label-group">
         <input type="url" name="rss" id="rss" class="form-control" placeholder="URL de votre flux" required autofocus>
         <label for="rss">URL de votre flux</label>
@@ -149,15 +155,15 @@
         <small id="templateHelp" class="form-text text-muted">Collez ici votre template Mustache pour créer l'image. Les balises qui seront remplacés sont <b>imageURL</b> (lien vers image de l'épisode), <b>epTitle</b> (titre de l'épisode), <b>podTitle</b> (titre du podcast) et <b>podSub</b> (le sous titre du podcast)</small>
       </div>
 
-      {{#yt_logged}}
-        <div class="form-check" style="margin-bottom: 1rem;">
-          <input type="checkbox" class="form-check-input" name="publishYT" id="publishYT">
-          <label class="form-check-label" for="publishYT">Mettre en ligne sur Youtube</label>
-        </div>
-      {{/yt_logged}}
-      {{^yt_logged}}
-        <a href="/yt/login" class="btn btn-lg btn-block btn-primary">Se connecter à Youtube</a>
-      {{/yt_logged}}
+      {{#ENABLE_YOUTUBE}}
+        {{#yt_logged}}
+          <div class="form-check" style="margin-bottom: 1rem;">
+            <input type="checkbox" class="form-check-input" name="publishYT" id="publishYT">
+            <label class="form-check-label" for="publishYT">Mettre en ligne sur Youtube</label>
+          </div>
+        {{/yt_logged}}
+      {{/ENABLE_YOUTUBE}}
+
       <button class="btn btn-lg btn-primary btn-block" type="submit">Lancer la conversion</button>
       <div class="footer mt-5 mb-3 text-muted text-center ">
         <p>Cet outil utilise le tutoriel venant d'Alliés Numériques</p>

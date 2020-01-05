@@ -206,6 +206,16 @@
         <label for="API_PWD">Mot de passe de l'API</label>
     </div>
 
+    <div class="form-check" style="margin-bottom: 1rem;">
+      <input type="checkbox" class="form-check-input" name="ENABLE_YOUTUBE" id="ENABLE_YOUTUBE" 
+      {{ #ENABLE_YOUTUBE }}
+        checked
+      {{ /ENABLE_YOUTUBE }}>
+      <label class="form-check-label" for="ENABLE_YOUTUBE">Activer l'upload sur Youtube</label>
+      <small class="form-text text-muted">Pensez à aller modifier le .env ou les variables d'environnement avec les accès à l'API</small>
+
+    </div>
+
     <div class="form-label-group" data-children-count="1">
         <input type="text" name="GOOGLE_FONT_KEY" id="API_PWD" value="{{ GOOGLE_FONT_KEY }}"class="form-control" placeholder="Mot de passe de l'API" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
         <label for="GOOGLE_FONT_KEY">Mot de passe de l'API Google Font</label>
