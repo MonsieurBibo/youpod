@@ -15,10 +15,17 @@ const getMP3Duration = require('get-mp3-duration')
 const bdd = require(__dirname + "/models/index.js")
 const getSize = require('get-folder-size');
 const Op = bdd.Sequelize.Op;
+const package = require("./package.json")
 
 require('dotenv').config()
 
+const yt = require("./youtube.js")
+
 var app = express()
+
+partials = {
+  footer: fs.readFileSync(path.join(__dirname, "/web/partials/footer.mustache"), "utf8")
+}
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -40,6 +47,17 @@ setInterval(flush, 1000 * 60 * 15);
 restartGeneration();
  
 var parser = new Parser();
+
+app.get("/yt/login", (req, res) => {
+  res.redirect(yt.google_url)
+})
+
+app.get("/yt/redirect", (req, res) => {
+  req.session.google_code = req.query.code
+  req.session.save((err) => {
+    res.redirect("/")
+  })
+})
 
 app.get("/static/:file", (req, res) => {
   res.sendFile(path.join(__dirname, "/web/static/", req.params.file))
@@ -69,7 +87,7 @@ app.get("/login", csrfProtection, (req, res) => {
   }
 
   res.setHeader("content-type", "text/html");
-  res.send(mustache.render(template, render_object))
+  res.send(mustache.render(template, render_object, partials))
 })
 
 app.post("/admin/authenticate", csrfProtection, (req, res) => {
@@ -102,7 +120,7 @@ app.get("/admin/login", csrfProtection, (req, res) => {
   }
 
   res.setHeader("content-type", "text/html");
-  res.send(mustache.render(template, render_object))
+  res.send(mustache.render(template, render_object, partials))
 })
 
 app.post("/admin/action", (req, res) => {
@@ -155,24 +173,32 @@ app.post("/admin/option", (req, res) => {
   if (req.session.loggin_admin != undefined) {
     keys = Object.keys(req.body)
 
+    bdd.Option.update({value: req.body.ENABLE_YOUTUBE != undefined ? true : false}, {
+      where: {
+        key: "ENABLE_YOUTUBE"
+      }
+    })
+    
     keys.forEach((k) => {
-      bdd.Option.update({value: req.body[k]}, {
-        where: {
-          key: k
-        }
-      })
+      if (k != "ENABLE_YOUTUBE") {
+        bdd.Option.update({value: req.body[k]}, {
+          where: {
+            key: k
+          }
+        })
+      }
     })
 
     res.redirect("/admin")
   } else {
-    res.status(403)
+    res.redirect("/admin/login")
   }
 })
 
 app.get("/admin/queue", (req, res) => {
   if (req.session.loggin_admin != undefined) {
-    bdd.Video.findAll({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((videos) => {
-      returnObj = {queue: []}
+    bdd.Video.findAll({where: {[Op.or]: [{status: "during"}, {status: "waiting"}]}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((videos) => {
+      returnObj = {queue: [], during: []}
 
       for (i = 0; i < videos.length; i++) {
         o = {
@@ -183,7 +209,11 @@ app.get("/admin/queue", (req, res) => {
           id: videos[i].id
         }
 
-        returnObj.queue.push(o)
+        if (videos[i].status == "during") {
+          returnObj.during.push(o)
+        } else {
+          returnObj.queue.push(o)
+        }
       }
 
       res.header("Access-Control-Allow-Origin", process.env.HOST);
@@ -224,23 +254,31 @@ app.get("/admin", (req, res) => {
                       getOption("GMAIL_PWD", (GMAIL_PWD) => {
                         getOption("GEN_PWD", (GEN_PWD) => {
                           getOption("API_PWD", (API_PWD) => {
-                            var render_object = {
-                              nb_gen_video: nb_gen_video,
-                              nb_save_video: nb_save_video,
-                              nb_waiting_video: nb_waiting_video,
-                              nb_rss_feed: nb_rss_feed,
-                              size_export_folder: size_export_folder,
-                              MAX_DURING: MAX_DURING,
-                              MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
-                              KEEPING_TIME: KEEPING_TIME,
-                              GMAIL_ADDR: GMAIL_ADDR,
-                              GMAIL_PWD: GMAIL_PWD,
-                              GEN_PWD: GEN_PWD,
-                              API_PWD: API_PWD
-                            }
-                          
-                            res.setHeader("content-type", "text/html");
-                            res.send(mustache.render(template, render_object))
+                            getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
+                              getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
+                                var render_object = {
+                                  nb_gen_video: nb_gen_video,
+                                  nb_save_video: nb_save_video,
+                                  nb_waiting_video: nb_waiting_video,
+                                  nb_rss_feed: nb_rss_feed,
+                                  size_export_folder: size_export_folder,
+                                  MAX_DURING: MAX_DURING,
+                                  MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
+                                  KEEPING_TIME: KEEPING_TIME,
+                                  GMAIL_ADDR: GMAIL_ADDR,
+                                  GMAIL_PWD: GMAIL_PWD,
+                                  GEN_PWD: GEN_PWD,
+                                  API_PWD: API_PWD,
+                                  GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
+                                  ENABLE_YOUTUBE: ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+                                  youpod_version: package.version
+                                }
+                              
+                                res.setHeader("content-type", "text/html");
+                                res.send(mustache.render(template, render_object, partials))
+                              })
+                            })
+
                           })
                         })
                       })
@@ -303,7 +341,7 @@ app.get("/preview", csrfProtection, (req, res) => {
           }
         
           res.setHeader("content-type", "text/html");
-          res.send(mustache.render(template, render_object))
+          res.send(mustache.render(template, render_object, partials))
         })
     
       } else {
@@ -322,7 +360,7 @@ app.get("/preview", csrfProtection, (req, res) => {
             }
           
             res.setHeader("content-type", "text/html");
-            res.send(mustache.render(template, render_object))
+            res.send(mustache.render(template, render_object, partials))
           })
         } else {
           res.redirect("/login?return=preview")
@@ -336,46 +374,56 @@ app.get("/preview", csrfProtection, (req, res) => {
 app.get("/custom", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => {
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
-      if (GEN_PWD == "") {
-        bdd.Video.count({
-          where: {
-            [Op.or]: [{status: "waiting"}, {status: "during"}]
-          }
-        }).then((nb) => {
-          template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
-    
-          var render_object = {
-            "waiting_list": nb,
-            "keeping_time": KEEPING_TIME,
-            "csrfToken": req.csrfToken
-          }
+      getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
+        getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
+          if (GEN_PWD == "") {
+            bdd.Video.count({
+              where: {
+                [Op.or]: [{status: "waiting"}, {status: "during"}]
+              }
+            }).then((nb) => {
+              template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
         
-          res.setHeader("content-type", "text/html");
-          res.send(mustache.render(template, render_object))
-        })
-      } else {
-        if (req.session.logged != undefined) {
-          bdd.Video.count({
-            where: {
-              [Op.or]: [{status: "waiting"}, {status: "during"}]
-            }
-          }).then((nb) => {
-            template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
-      
-            var render_object = {
-              "waiting_list": nb,
-              "keeping_time": KEEPING_TIME,
-              "need_pass": GEN_PWD!="",
-              "csrfToken": req.csrfToken
-            }
+              var render_object = {
+                "waiting_list": nb,
+                "keeping_time": KEEPING_TIME,
+                "csrfToken": req.csrfToken,
+                "ENABLE_YOUTUBE": ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+                "yt_logged": req.session.google_code != undefined ? true : false,
+                "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
+              }
+            
+              res.setHeader("content-type", "text/html");
+              res.send(mustache.render(template, render_object, partials))
+            })
+          } else {
+            if (req.session.logged != undefined) {
+              bdd.Video.count({
+                where: {
+                  [Op.or]: [{status: "waiting"}, {status: "during"}]
+                }
+              }).then((nb) => {
+                template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
           
-            res.setHeader("content-type", "text/html");
-            res.send(mustache.render(template, render_object))
-          })
-        } else {
-          res.redirect("/login?return=custom")
-        }
-      }
+                var render_object = {
+                  "waiting_list": nb,
+                  "keeping_time": KEEPING_TIME,
+                  "need_pass": GEN_PWD!="",
+                  "csrfToken": req.csrfToken,
+                  "ENABLE_YOUTUBE": ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+                  "yt_logged": req.session.google_code != undefined ? true : false,
+                  "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
+                }
+              
+                res.setHeader("content-type", "text/html");
+                res.send(mustache.render(template, render_object, partials))
+              })
+            } else {
+              res.redirect("/login?return=custom")
+            }
+          }
+        })
+      })
     })
   })
 })
@@ -383,47 +431,57 @@ app.get("/custom", csrfProtection, (req, res) => {
 app.get("/", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => {
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
-      if (GEN_PWD == "") {
-        bdd.Video.count({
-          where: {
-            [Op.or]: [{status: "waiting"}, {status: "during"}]
-          }
-        }).then((nb) => {
-          template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
-      
-          var render_object = {
-            "waiting_list": nb,
-            "keeping_time": KEEPING_TIME,
-            "need_pass": GEN_PWD!="",
-            "csrfToken": req.csrfToken
-          }
-        
-          res.setHeader("content-type", "text/html");
-          res.send(mustache.render(template, render_object))
-        })
-      } else {
-        if (req.session.logged != undefined) {
-          bdd.Video.count({
-            where: {
-              [Op.or]: [{status: "waiting"}, {status: "during"}]
-            }
-          }).then((nb) => {
-            template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
-        
-            var render_object = {
-              "waiting_list": nb,
-              "keeping_time": KEEPING_TIME,
-              "need_pass": GEN_PWD!="",
-              "csrfToken": req.csrfToken
-            }
+      getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
+        getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
+          if (GEN_PWD == "") {
+            bdd.Video.count({
+              where: {
+                [Op.or]: [{status: "waiting"}, {status: "during"}]
+              }
+            }).then((nb) => {
+              template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
           
-            res.setHeader("content-type", "text/html");
-            res.send(mustache.render(template, render_object))
-          })
-        } else {
-          res.redirect("/login")
-        }
-      }
+              var render_object = {
+                "waiting_list": nb,
+                "keeping_time": KEEPING_TIME,
+                "need_pass": GEN_PWD!="",
+                "csrfToken": req.csrfToken,
+                "ENABLE_YOUTUBE": ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+                "yt_logged": req.session.google_code != undefined ? true : false,
+                "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
+              }
+            
+              res.setHeader("content-type", "text/html");
+              res.send(mustache.render(template, render_object, partials))
+            })
+          } else {
+            if (req.session.logged != undefined) {
+              bdd.Video.count({
+                where: {
+                  [Op.or]: [{status: "waiting"}, {status: "during"}]
+                }
+              }).then((nb) => {
+                template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
+            
+                var render_object = {
+                  "waiting_list": nb,
+                  "keeping_time": KEEPING_TIME,
+                  "need_pass": GEN_PWD!="",
+                  "csrfToken": req.csrfToken,
+                  "ENABLE_YOUTUBE": ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+                  "yt_logged": req.session.google_code != undefined ? true : false,
+                  "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
+                }
+              
+                res.setHeader("content-type", "text/html");
+                res.send(mustache.render(template, render_object, partials))
+              })
+            } else {
+              res.redirect("/login")
+            }
+          }
+        })
+      })
     })
    })
 })
@@ -493,10 +551,14 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                     guid: guid,
                     template: req.body.template,
                     access_token: randtoken.generate(32),
-                    font:req.body["font-choice"]
+                    font:req.body["font-choice"],
+                    googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
                   }).then((video) => {
-                    initNewGeneration();
-                    res.sendFile(path.join(__dirname, "/web/done.html"))
+                      req.session.google_code = undefined
+                      req.session.save((err) => {
+                        initNewGeneration();
+                        res.sendFile(path.join(__dirname, "/web/done.html"))
+                      })
                   })
                 })
               })
@@ -508,10 +570,14 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                   guid: req.body.selectEp,
                   template: req.body.template,
                   access_token: randtoken.generate(32),
-                  font:req.body["font-choice"]
+                  font:req.body["font-choice"],
+                  googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
                 }).then((video) => {
-                  initNewGeneration();
-                  res.sendFile(path.join(__dirname, "/web/done.html"))
+                  req.session.google_code = undefined
+                  req.session.save((err) => {
+                    initNewGeneration();
+                    res.sendFile(path.join(__dirname, "/web/done.html"))
+                  })
                 })
               })
             }
@@ -543,10 +609,14 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                       guid: guid,
                       template: req.body.template,
                       access_token: randtoken.generate(32),
-                      font:req.body["font-choice"]
+                      font:req.body["font-choice"],
+                      googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
                     }).then((video) => {
-                      initNewGeneration();
-                      res.sendFile(path.join(__dirname, "/web/done.html"))
+                      req.session.google_code = undefined
+                      req.session.save((err) => {
+                        initNewGeneration();
+                        res.sendFile(path.join(__dirname, "/web/done.html"))
+                      })
                     })
                   })
                 })
@@ -558,10 +628,14 @@ app.post("/addvideo", csrfProtection, (req, res) => {
                     guid: req.body.selectEp,
                     template: req.body.template,
                     access_token: randtoken.generate(32),
-                    font:req.body["font-choice"]
+                    font:req.body["font-choice"],
+                    googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
                   }).then((video) => {
-                    initNewGeneration();
-                    res.sendFile(path.join(__dirname, "/web/done.html"))
+                    req.session.google_code = undefined
+                    req.session.save((err) => {
+                      initNewGeneration();
+                      res.sendFile(path.join(__dirname, "/web/done.html"))
+                    })
                   })
                 })
               }
@@ -633,10 +707,14 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
             podTitle: req.body.podTitle,
             podSub: req.body.podSub,
             audioURL: req.body.audioURL,
-            font: req.body["font-choice"]
+            font: req.body["font-choice"],
+            googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
           }).then((video) => {
-            initNewGeneration();
-            res.sendFile(path.join(__dirname, "/web/done.html"))  
+            req.session.google_code = undefined
+            req.session.save((err) => {
+              initNewGeneration();
+              res.sendFile(path.join(__dirname, "/web/done.html"))
+            })
           })
         })
       } else {
@@ -656,10 +734,14 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
               podTitle: req.body.podTitle,
               podSub: req.body.podSub,
               audioURL: req.body.audioURL,
-              font: req.body["font-choice"]
+              font: req.body["font-choice"],
+              googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
             }).then((video) => {
-              initNewGeneration();
-              res.sendFile(path.join(__dirname, "/web/done.html"))  
+              req.session.google_code = undefined
+              req.session.save((err) => {
+                initNewGeneration();
+                res.sendFile(path.join(__dirname, "/web/done.html"))
+              })
             })
           })
         } else {
@@ -908,13 +990,13 @@ function restartGeneration() {
 }
 
 function flush() {
-  bdd.Video.findAll({where: {status: "finished"}}).then((videos) => {
-    if (videos.length >=1) {
-      for (i = 0; i < videos.length; i++) {
-        time = Date.now() - videos[i].end_timestamp
-        time = time / (1000 * 60 * 60);
-    
-        getOption("KEEPING_TIME", (KEEPING_TIME) => {
+  getOption("KEEPING_TIME", (KEEPING_TIME) => {
+    bdd.Video.findAll({where: {status: "finished"}}).then((videos) => {
+      if (videos.length >=1) {
+        for (i = 0; i < videos.length; i++) {
+          time = Date.now() - videos[i].end_timestamp
+          time = time / (1000 * 60 * 60);
+          
           if (time > KEEPING_TIME) {
             try {
               fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${videos[i].id}.mp4`))
@@ -926,32 +1008,33 @@ function flush() {
             console.log("Flush video " + videos[i].id)
       
           }
-        })
-      }
-    }
-  })
-
-  bdd.Preview.findAll({where: {status: "finished"}}).then((previews) => {
-    if (previews.length >=1) {
-      for (i = 0; i < previews.length; i++) {
-        time = Date.now() - previews[i].end_timestamp
-        time = time / (1000 * 60 * 60);
-    
-        if (time > process.env.KEEPING_TIME) {
-          try {
-            fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${previews[i].id}.mp4`))
-          } catch (err) {
-            console.log(`Fichier preview_${previews[i].id}.mp4 déjà supprimé`)
-          }
-
-          previews[i].status = "deleted"
-          previews[i].save()
-          console.log("Flush preview " + previews[i].id)
-    
         }
       }
-    } 
+    })
+
+    bdd.Preview.findAll({where: {status: "finished"}}).then((previews) => {
+      if (previews.length >=1) {
+        for (i = 0; i < previews.length; i++) {
+          time = Date.now() - previews[i].end_timestamp
+          time = time / (1000 * 60 * 60);
+      
+          if (time > KEEPING_TIME) {
+            try {
+              fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${previews[i].id}.mp4`))
+            } catch (err) {
+              console.log(`Fichier preview_${previews[i].id}.mp4 déjà supprimé`)
+            }
+
+            previews[i].status = "deleted"
+            previews[i].save()
+            console.log("Flush preview " + previews[i].id)
+      
+          }
+        }
+      } 
+    })
   })
+  
 }
 
 function initNewGeneration() {
@@ -1322,6 +1405,11 @@ function sendMail(id, ep_title) {
             if(err) return console.log(err)
           });
       
+          if (video.googleToken != undefined) {
+            yt.upload(video.googleToken, path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${video.id}.mp4`), video)
+            video.googleToken = "deleted"
+          }
+
           video.email = "deleted"
           video.save()
         })

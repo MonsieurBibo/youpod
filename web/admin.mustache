@@ -92,6 +92,7 @@
     <img class="mb-4" src="./static/logo.png" alt="YouPod" width="300" height="69">
   
   <h1> Panneau d'administration</h1>
+  <p>Youpod version {{ youpod_version }}</p>
   </div>
   <div class="activity lead">
     <h2>Statistiques</h2>
@@ -107,7 +108,7 @@
       <img src="./static/downloaded.png" alt="downloaded" width="40" height="40"><br>
      <b>{{ nb_save_video }}</b> Vidéos<br>
       <small>Stockées</small><br>
-      <small><button onclick="flushVideo()">Vider</button></small>      
+      <small><a href="" onclick="flushVideo()">Vider</a></small>      
     </div>
     <div class="col iconsadmin">
       <img src="./static/storage.png" alt="storage" width="40" height="40"><br>
@@ -131,12 +132,23 @@
     </div>
     <div class="col-6 ">
      <b>{{ nb_waiting_video }}</b> Vidéos en attente<br>
-     <small><button onclick="flushList()">Vider</button><br>
+     <small><a href="" onclick="flushList()">Vider</a><br>
     </div>
     <div class="col-2 "></div>
 
   </div>
   <br><br>
+  <h3>En cours</h3>
+    <table id="during" class="table table-sm table-hover table-borderless">
+        <thead class="thead-dark">
+            <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Titre/RSS</th>
+            <th scope="col">Mail</th>
+            </tr>
+        </thead>
+    </table>
+    <h3>En attente</h3>
   <table id="queue" class="table table-sm table-hover table-borderless">
         <thead class="thead-dark">
             <tr>
@@ -176,6 +188,7 @@
     <div class="form-label-group" data-children-count="1">
         <input type="email" name="GMAIL_ADDR" id="GMAIL_ADDR" class="form-control" value="{{ GMAIL_ADDR }}" placeholder="Adresse Gmail de votre bot" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-6">
         <label for="GMAIL_ADDR">Adresse Gmail de votre site</label>
+        <small class="form-text text-muted"><a href="https://github.com/Bigaston/youpod/wiki/Configurer-son-compte-mail">Explication sur comment configurer son compte Email</a></small>
     </div>
 
     <div class="form-label-group" data-children-count="1">
@@ -193,7 +206,25 @@
         <label for="API_PWD">Mot de passe de l'API</label>
     </div>
 
+    <div class="form-check" style="margin-bottom: 1rem;">
+      <input type="checkbox" class="form-check-input" name="ENABLE_YOUTUBE" id="ENABLE_YOUTUBE" 
+      {{ #ENABLE_YOUTUBE }}
+        checked
+      {{ /ENABLE_YOUTUBE }}>
+      <label class="form-check-label" for="ENABLE_YOUTUBE">Activer l'upload sur Youtube</label>
+      <small class="form-text text-muted">Pensez à aller modifier le .env ou les variables d'environnement avec les accès à l'API</small>
+
+    </div>
+
+    <div class="form-label-group" data-children-count="1">
+        <input type="text" name="GOOGLE_FONT_KEY" id="API_PWD" value="{{ GOOGLE_FONT_KEY }}"class="form-control" placeholder="Mot de passe de l'API" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
+        <label for="GOOGLE_FONT_KEY">Mot de passe de l'API Google Font</label>
+        <small class="form-text text-muted"><a href="https://developers.google.com/fonts/docs/developer_api#APIKey">Récupérer votre clé</a></small>
+    </div>
+
     <button class="btn btn-lg btn-primary btn-block" onclick="submitForm()">Sauvegarder</button>
+
+    {{> footer}}
 
     </form>
 </div>
