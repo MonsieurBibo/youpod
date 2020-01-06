@@ -68,3 +68,18 @@ function createForm(v) {
         </form>
     `
 }
+
+//Affichage choix email
+document.getElementById("MAIL_SERVICE").addEventListener("change", updateEmail)
+
+function updateEmail() {
+    if (document.getElementById("MAIL_SERVICE").value == "gmail") {
+        document.getElementById("gmail_group").style.display = "block";
+        document.getElementById("smtp_group").style.display = "none";
+    } else {
+        document.getElementById("gmail_group").style.display = "none";
+        document.getElementById("smtp_group").style.display = "block";
+    }
+}
+
+updateEmail()

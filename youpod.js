@@ -256,29 +256,43 @@ app.get("/admin", (req, res) => {
                           getOption("API_PWD", (API_PWD) => {
                             getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
                               getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
-                                var render_object = {
-                                  nb_gen_video: nb_gen_video,
-                                  nb_save_video: nb_save_video,
-                                  nb_waiting_video: nb_waiting_video,
-                                  nb_rss_feed: nb_rss_feed,
-                                  size_export_folder: size_export_folder,
-                                  MAX_DURING: MAX_DURING,
-                                  MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
-                                  KEEPING_TIME: KEEPING_TIME,
-                                  GMAIL_ADDR: GMAIL_ADDR,
-                                  GMAIL_PWD: GMAIL_PWD,
-                                  GEN_PWD: GEN_PWD,
-                                  API_PWD: API_PWD,
-                                  GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
-                                  ENABLE_YOUTUBE: ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
-                                  youpod_version: package.version
-                                }
-                              
-                                res.setHeader("content-type", "text/html");
-                                res.send(mustache.render(template, render_object, partials))
+                                getOption("MAIL_SERVICE", (MAIL_SERVICE) => {
+                                  getOption("SMTP_HOST", (SMTP_HOST) => {
+                                    getOption("SMTP_PORT", (SMTP_PORT) => {
+                                      getOption("SMTP_USERNAME", (SMTP_USERNAME) => {
+                                        getOption("SMTP_PASSWORD", (SMTP_PASSWORD) => {
+                                          var render_object = {
+                                            nb_gen_video: nb_gen_video,
+                                            nb_save_video: nb_save_video,
+                                            nb_waiting_video: nb_waiting_video,
+                                            nb_rss_feed: nb_rss_feed,
+                                            size_export_folder: size_export_folder,
+                                            MAX_DURING: MAX_DURING,
+                                            MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
+                                            KEEPING_TIME: KEEPING_TIME,
+                                            GMAIL_ADDR: GMAIL_ADDR,
+                                            GMAIL_PWD: GMAIL_PWD,
+                                            GEN_PWD: GEN_PWD,
+                                            API_PWD: API_PWD,
+                                            GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
+                                            IS_GMAIL: MAIL_SERVICE == "gmail" ?  MAIL_SERVICE : undefined,
+                                            SMTP_HOST: SMTP_HOST,
+                                            SMTP_PORT: SMTP_PORT,
+                                            SMTP_USERNAME: SMTP_USERNAME,
+                                            SMTP_PASSWORD: SMTP_PASSWORD,
+                                            ENABLE_YOUTUBE: ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+                                            youpod_version: package.version
+                                          }
+                                        
+                                          res.setHeader("content-type", "text/html");
+                                          res.send(mustache.render(template, render_object, partials))
+                                        })
+                                      })
+                                    })
+                                  })
+                                })
                               })
                             })
-
                           })
                         })
                       })
