@@ -261,31 +261,34 @@ app.get("/admin", (req, res) => {
                                     getOption("SMTP_PORT", (SMTP_PORT) => {
                                       getOption("SMTP_USERNAME", (SMTP_USERNAME) => {
                                         getOption("SMTP_PASSWORD", (SMTP_PASSWORD) => {
-                                          var render_object = {
-                                            nb_gen_video: nb_gen_video,
-                                            nb_save_video: nb_save_video,
-                                            nb_waiting_video: nb_waiting_video,
-                                            nb_rss_feed: nb_rss_feed,
-                                            size_export_folder: size_export_folder,
-                                            MAX_DURING: MAX_DURING,
-                                            MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
-                                            KEEPING_TIME: KEEPING_TIME,
-                                            GMAIL_ADDR: GMAIL_ADDR,
-                                            GMAIL_PWD: GMAIL_PWD,
-                                            GEN_PWD: GEN_PWD,
-                                            API_PWD: API_PWD,
-                                            GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
-                                            IS_GMAIL: MAIL_SERVICE == "gmail" ?  MAIL_SERVICE : undefined,
-                                            SMTP_HOST: SMTP_HOST,
-                                            SMTP_PORT: SMTP_PORT,
-                                            SMTP_USERNAME: SMTP_USERNAME,
-                                            SMTP_PASSWORD: SMTP_PASSWORD,
-                                            ENABLE_YOUTUBE: ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
-                                            youpod_version: package.version
-                                          }
-                                        
-                                          res.setHeader("content-type", "text/html");
-                                          res.send(mustache.render(template, render_object, partials))
+                                          getOption("SMTP_DOMAIN", (SMTP_DOMAIN) => {
+                                            var render_object = {
+                                              nb_gen_video: nb_gen_video,
+                                              nb_save_video: nb_save_video,
+                                              nb_waiting_video: nb_waiting_video,
+                                              nb_rss_feed: nb_rss_feed,
+                                              size_export_folder: size_export_folder,
+                                              MAX_DURING: MAX_DURING,
+                                              MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
+                                              KEEPING_TIME: KEEPING_TIME,
+                                              GMAIL_ADDR: GMAIL_ADDR,
+                                              GMAIL_PWD: GMAIL_PWD,
+                                              GEN_PWD: GEN_PWD,
+                                              API_PWD: API_PWD,
+                                              GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
+                                              IS_GMAIL: MAIL_SERVICE == "gmail" ?  MAIL_SERVICE : undefined,
+                                              SMTP_HOST: SMTP_HOST,
+                                              SMTP_DOMAIN: SMTP_DOMAIN,
+                                              SMTP_PORT: SMTP_PORT,
+                                              SMTP_USERNAME: SMTP_USERNAME,
+                                              SMTP_PASSWORD: SMTP_PASSWORD,
+                                              ENABLE_YOUTUBE: ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+                                              youpod_version: package.version
+                                            }
+                                          
+                                            res.setHeader("content-type", "text/html");
+                                            res.send(mustache.render(template, render_object, partials))
+                                          })
                                         })
                                       })
                                     })
@@ -1348,29 +1351,19 @@ function sendMailPreview(id) {
   
   
       const mailOptions = {
-        from: 'youpod@balado.tools', // sender address
+        from: 'YouPod@youpod.io', // sender address
         to: preview.email, // list of receivers
         subject: `Vidéo générée sur Youpod!`, // Subject line
         html: mustache.render(template, renderObj)
       };
 
-      getOption("GMAIL_ADDR", (GMAIL_ADDR)=> {
-        getOption("GMAIL_PWD", (GMAIL_PWD) => {
-          transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: GMAIL_ADDR,
-                pass: GMAIL_PWD
-              }
-          });
-
-          transporter.sendMail(mailOptions, function (err, info) {
-            if(err) return console.log(err)
-          });
-      
-          preview.email = "deleted"
-          preview.save();
-        })
+      getTransporter((transporter) => {
+        transporter.sendMail(mailOptions, function (err, info) {
+          if(err) return console.log(err)
+        });
+    
+        preview.email = "deleted"
+        preview.save();
       })
     })
   })
@@ -1398,13 +1391,35 @@ function sendMail(id, ep_title) {
         }
       }
 
-      const mailOptions = {
-        from: 'youpod@balado.tools', // sender address
-        to: video.email, // list of receivers
-        subject: `Vidéo générée sur Youpod : ${ep_title}`, // Subject line
-        html: mustache.render(template, renderObj)
-      };
+      getOption("SMTP_DOMAIN", (SMTP_DOMAIN) => {
+        const mailOptions = {
+          from: 'YouPod@' + SMTP_DOMAIN, // sender address
+          to: video.email, // list of receivers
+          subject: `Vidéo générée sur Youpod : ${ep_title}`, // Subject line
+          html: mustache.render(template, renderObj)
+        };
+  
+        getTransporter((transporter) => {
+          transporter.sendMail(mailOptions, function (err, info) {
+            if(err) return console.log(err)
+          });
+          
+          if (video.googleToken != undefined) {
+            yt.upload(video.googleToken, path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${video.id}.mp4`), video)
+            video.googleToken = "deleted"
+          }
+    
+          video.email = "deleted"
+          video.save()
+        })
+      })
+    })
+  })
+}
 
+function getTransporter(cb) {
+  getOption("MAIL_SERVICE", (MAIL_SERVICE) => {
+    if (MAIL_SERVICE == "gmail") {
       getOption("GMAIL_ADDR", (GMAIL_ADDR)=> {
         getOption("GMAIL_PWD", (GMAIL_PWD) => {
           transporter = nodemailer.createTransport({
@@ -1415,22 +1430,30 @@ function sendMail(id, ep_title) {
               }
           });
 
-          transporter.sendMail(mailOptions, function (err, info) {
-            if(err) return console.log(err)
-          });
-      
-          if (video.googleToken != undefined) {
-            yt.upload(video.googleToken, path.join(pathEvalute(process.env.EXPORT_FOLDER), `output_${video.id}.mp4`), video)
-            video.googleToken = "deleted"
-          }
-
-          video.email = "deleted"
-          video.save()
+          cb(transporter)
         })
       })
-      
+    } else {
+      getOption("SMTP_HOST", (SMTP_HOST) => {
+        getOption("SMTP_PORT", (SMTP_PORT) => {
+          getOption("SMTP_USERNAME", (SMTP_USERNAME) => {
+            getOption("SMTP_PASSWORD", (SMTP_PASSWORD) => {
+              transporter = nodemailer.createTransport({
+                host: SMTP_HOST,
+                port: SMTP_PORT,
+                secure: false, // upgrade later with STARTTLS
+                auth: {
+                  user: SMTP_USERNAME,
+                  pass: SMTP_PASSWORD
+                }
+              });
 
-    })
+              cb(transporter)
+            })
+          })
+        })
+      })
+    }
   })
 }
 

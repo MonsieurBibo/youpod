@@ -22,15 +22,17 @@ db.sequelize.sync().then(()=> {
             db.Option.findOrCreate({where: {key: 'KEEPING_TIME'}, defaults: {value: '12'}}).then(() => {
                 db.Option.findOrCreate({where: {key: 'MAIL_SERVICE'}, defaults: {value: 'gmail'}}).then(() => {
                     db.Option.findOrCreate({where: {key: 'SMTP_HOST'}, defaults: {value: 'send.example.com'}}).then(() => {
-                        db.Option.findOrCreate({where: {key: 'SMTP_PORT'}, defaults: {value: '587'}}).then(() => { 
-                            db.Option.findOrCreate({where: {key: 'SMTP_USERNAME'}, defaults: {value: 'default'}}).then(() => { 
-                                db.Option.findOrCreate({where: {key: 'SMTP_PASSWORD'}, defaults: {value: '123456'}}).then(() => { 
-                                    db.Option.findOrCreate({where: {key: 'GMAIL_ADDR'}, defaults: {value: 'michel@example.com'}}).then(() => {
-                                        db.Option.findOrCreate({where: {key: 'GMAIL_PWD'}, defaults: {value: '123456'}}).then(() => {
-                                            db.Option.findOrCreate({where: {key: 'GEN_PWD'}, defaults: {value: ''}}).then(() => {
-                                                db.Option.findOrCreate({where: {key: 'API_PWD'}, defaults: {value: '123456'}}).then(() => {
-                                                    db.Option.findOrCreate({where: {key: 'GOOGLE_FONT_KEY'}, defaults: {value: ''}}).then(() => {
-                                                        db.Option.findOrCreate({where: {key: 'ENABLE_YOUTUBE'}, defaults: {value: 'true'}})
+                        db.Option.findOrCreate({where: {key: 'SMTP_DOMAIN'}, defaults: {value: 'send.example.com'}}).then(() => { 
+                            db.Option.findOrCreate({where: {key: 'SMTP_PORT'}, defaults: {value: '587'}}).then(() => { 
+                                db.Option.findOrCreate({where: {key: 'SMTP_USERNAME'}, defaults: {value: 'default'}}).then(() => { 
+                                    db.Option.findOrCreate({where: {key: 'SMTP_PASSWORD'}, defaults: {value: '123456'}}).then(() => { 
+                                        db.Option.findOrCreate({where: {key: 'GMAIL_ADDR'}, defaults: {value: 'michel@example.com'}}).then(() => {
+                                            db.Option.findOrCreate({where: {key: 'GMAIL_PWD'}, defaults: {value: '123456'}}).then(() => {
+                                                db.Option.findOrCreate({where: {key: 'GEN_PWD'}, defaults: {value: ''}}).then(() => {
+                                                    db.Option.findOrCreate({where: {key: 'API_PWD'}, defaults: {value: '123456'}}).then(() => {
+                                                        db.Option.findOrCreate({where: {key: 'GOOGLE_FONT_KEY'}, defaults: {value: ''}}).then(() => {
+                                                            db.Option.findOrCreate({where: {key: 'ENABLE_YOUTUBE'}, defaults: {value: 'true'}})
+                                                        })
                                                     })
                                                 })
                                             })
@@ -38,7 +40,7 @@ db.sequelize.sync().then(()=> {
                                     })
                                 })
                             })
-                        })
+                        })  
                     })
                 })
             })
