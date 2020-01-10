@@ -340,7 +340,69 @@ app.post("/authenticate", csrfProtection, (req, res) => {
   }
 })
 
-app.get("/preview", csrfProtection, (req, res) => {
+app.post("/social/add", csrfProtection, (req, res) => {
+  getOption("GEN_PWD", (GEN_PWD) => { 
+    if (GEN_PWD == "") {
+      if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined) {
+        if (req.body.color == undefined) {
+          color = "blanc"
+        } else {
+          color = req.body.color
+        }
+  
+        checkIfExistPreview(req, res, color, () => {
+          bdd.Preview.create({
+            email: req.body.email,
+            access_token: randtoken.generate(32),
+            epTitle: req.body.epTitle,
+            podTitle: req.body.podTitle,
+            imgLink: req.body.imgURL,
+            audioLink: req.body.audioURL,
+            startTime: req.body.timestart,
+            color: color
+          }).then((preview) => {
+            initNewGeneration();
+            res.sendFile(path.join(__dirname, "/web/done.html"))
+          })
+        })
+      } else {
+        res.status(400).send("Votre requète n'est pas complète...")
+      }
+    } else {
+      if (req.session.logged != undefined) {
+        if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined) {
+          if (req.body.color == undefined) {
+            color = "blanc"
+          } else {
+            color = req.body.color
+          }
+          
+          checkIfExistPreview(req, res, color, () => {
+            bdd.Preview.create({
+              email: req.body.email,
+              access_token: randtoken.generate(32),
+              epTitle: req.body.epTitle,
+              podTitle: req.body.podTitle,
+              imgLink: req.body.imgURL,
+              audioLink: req.body.audioURL,
+              startTime: req.body.timestart,
+              color: color
+            }).then((preview) => {
+              initNewGeneration();
+              res.sendFile(path.join(__dirname, "/web/done.html"))
+            })
+          })
+        } else {
+          res.status(400).send("Votre requète n'est pas complète...")
+        }
+      } else {
+        res.redirect("/login")
+      }
+    }
+  })
+})
+
+app.get("/social", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => { 
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
       if (GEN_PWD == "") {
@@ -349,7 +411,7 @@ app.get("/preview", csrfProtection, (req, res) => {
             [Op.or]: [{status: "waiting"}, {status: "during"}]
           }
         }).then((nb) => {
-          template = fs.readFileSync(path.join(__dirname, "/web/preview.mustache"), "utf8")
+          template = fs.readFileSync(path.join(__dirname, "/web/social.mustache"), "utf8")
     
           var render_object = {
             "waiting_list": nb,
@@ -368,7 +430,7 @@ app.get("/preview", csrfProtection, (req, res) => {
               [Op.or]: [{status: "waiting"}, {status: "during"}]
             }
           }).then((nb) => {
-            template = fs.readFileSync(path.join(__dirname, "/web/preview.mustache"), "utf8")
+            template = fs.readFileSync(path.join(__dirname, "/web/social.mustache"), "utf8")
       
             var render_object = {
               "waiting_list": nb,
@@ -788,68 +850,6 @@ function checkIfExistCustom(req, res, cb) {
   })
 }
 
-app.post("/addvideopreview", csrfProtection, (req, res) => {
-  getOption("GEN_PWD", (GEN_PWD) => { 
-    if (GEN_PWD == "") {
-      if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined) {
-        if (req.body.color == undefined) {
-          color = "blanc"
-        } else {
-          color = req.body.color
-        }
-  
-        checkIfExistPreview(req, res, color, () => {
-          bdd.Preview.create({
-            email: req.body.email,
-            access_token: randtoken.generate(32),
-            epTitle: req.body.epTitle,
-            podTitle: req.body.podTitle,
-            imgLink: req.body.imgURL,
-            audioLink: req.body.audioURL,
-            startTime: req.body.timestart,
-            color: color
-          }).then((preview) => {
-            initNewGeneration();
-            res.sendFile(path.join(__dirname, "/web/done.html"))
-          })
-        })
-      } else {
-        res.status(400).send("Votre requète n'est pas complète...")
-      }
-    } else {
-      if (req.session.logged != undefined) {
-        if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined) {
-          if (req.body.color == undefined) {
-            color = "blanc"
-          } else {
-            color = req.body.color
-          }
-          
-          checkIfExistPreview(req, res, color, () => {
-            bdd.Preview.create({
-              email: req.body.email,
-              access_token: randtoken.generate(32),
-              epTitle: req.body.epTitle,
-              podTitle: req.body.podTitle,
-              imgLink: req.body.imgURL,
-              audioLink: req.body.audioURL,
-              startTime: req.body.timestart,
-              color: color
-            }).then((preview) => {
-              initNewGeneration();
-              res.sendFile(path.join(__dirname, "/web/done.html"))
-            })
-          })
-        } else {
-          res.status(400).send("Votre requète n'est pas complète...")
-        }
-      } else {
-        res.redirect("/login")
-      }
-    }
-  })
-})
-
 function checkIfExistPreview(req, res, color, cb) {
   bdd.Preview.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.epImg, audioURL: req.body.audioURL, startTime: req.body.timestart, color: color, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
     if (video == null) {
@@ -957,9 +957,11 @@ app.get("/api/feed", (req, res) => {
         }
     
         feed.items.forEach((i) => {
+          console.log(i)
           o = {
             title: i.title,
-            guid: i.guid.replace("<![CDATA[", "").replace("]]>", "")
+            guid: i.guid.replace("<![CDATA[", "").replace("]]>", ""),
+            audio: i.enclosure.url
           }
     
           resObj.data.push(o)

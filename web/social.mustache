@@ -15,45 +15,29 @@
             <h2>Bienvenue sur Youpod</h2>
             <p>Il y a actuellement <strong>{{ waiting_list }}</strong> vidéo(s) dans la liste d'attente. Une fois la vidéo générée, vous receverez un email contenant le lien pour la télécharger. Vous aurez alors <strong>{{ keeping_time }}H</strong> pour la télécharger.</p>
             
-            <form action="/addvideopreview" method="POST">
+            <form action="/social/add" method="POST">
                 <input type="hidden" name="_csrf" value="{{csrfToken}}">
 
-                <div class="form-group">
-                    <label for="imgURL">L'URL de votre image</label>
-                    <input type="url" class="form-control" id="imgURL" name="imgURL" placeholder="http://example.com/rss" required>
+                <div class="form-label-group">
+                    <input type="url" name="rss" id="rss" class="form-control" placeholder="URL de votre flux" required autofocus>
+                    <label for="rss">URL de votre flux</label>
                 </div>
-                <div class="form-group">
-                    <label for="epTitle">Le titre de l'épisode</label>
-                    <input type="text" class="form-control" id="epTitle" name="epTitle" placeholder="Super Titre D'épisode" required>
-                </div>
-                <div class="form-group">
-                    <label for="podTitle">Le nom du podcast</label>
-                    <input type="text" class="form-control" id="podTitle" name="podTitle" placeholder="Super Titre de Podcast" required>
-                </div>
-                <div class="form-group">
-                    <label for="audioURL">Votre fichier audio</label>
-                    <input type="url" class="form-control" id="audioURL" name="audioURL" placeholder="http://example.com/audio.mp3" required>
+                <button type="button" onclick="fetchFeed()" class="btn btn-info float-right" style="margin-bottom: 1rem;">Rechercher</button>
+                <br>
+                <div class="form-group ">
+                    <select id="selectEp" name="selectEp" class="form-control" disabled required>
+                        <option selected value="__last__">Dernier épisode</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
                     <label for="timestart">Début de la préview</label>
                     <input type="text" class="form-control" id="timestart" name="timestart" placeholder="00:00" maxlenght="6" required>
-                    <small id="timestartHelp" class="form-text text-muted">La vidéo durera 20s à partir de ce moment là. Entrez au format minutes:secondes</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="color">Couleur de contour</label>
-                    <select id="color" name="color" class="form-control" required>
-                        <option value="noir">Noir</option>
-                        <option value="gris">Gris</option>
-                        <option value="blanc">Blanc</option>
-                        <option value="bleu">Bleu</option>
-                        <option value="vert">Vert</option>
-                        <option value="jaune">Jaune</option>
-                        <option value="orange">Orange</option>
-                        <option value="rouge">Rouge</option>
-                        <option value="violet">Violet</option>
-                    </select>
+                    <label for="timeend">Fin de la préview</label>
+                    <input type="text" class="form-control" id="timeend" name="timeend" placeholder="00:00" maxlenght="6" required>
                 </div>
 
                 <div class="form-group">
@@ -72,7 +56,7 @@
             <p>Dev par Bigaston</p>
         </footer>
 
-
+        <script src="/static/social.js"></script>
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>    

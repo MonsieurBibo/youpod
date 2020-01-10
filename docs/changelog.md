@@ -1,4 +1,9 @@
 # Changelog
+## Version 1.2.0
+### Ajouts
+- Choix du service d'email entre SMTP et Gmail
+
+### Correction
 
 ## Version 1.1.0
 ### Ajouts
