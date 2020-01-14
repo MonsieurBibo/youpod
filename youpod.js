@@ -350,8 +350,8 @@ app.post("/social/add", csrfProtection, (req, res) => {
           color = req.body.color
         }
   
-        checkIfExistPreview(req, res, color, () => {
-          bdd.Preview.create({
+        checkIfExistSocial(req, res, color, () => {
+          bdd.Social.create({
             email: req.body.email,
             access_token: randtoken.generate(32),
             epTitle: req.body.epTitle,
@@ -360,7 +360,7 @@ app.post("/social/add", csrfProtection, (req, res) => {
             audioLink: req.body.audioURL,
             startTime: req.body.timestart,
             color: color
-          }).then((preview) => {
+          }).then((social) => {
             initNewGeneration();
             res.sendFile(path.join(__dirname, "/web/done.html"))
           })
@@ -377,17 +377,17 @@ app.post("/social/add", csrfProtection, (req, res) => {
             color = req.body.color
           }
           
-          checkIfExistPreview(req, res, color, () => {
-            bdd.Preview.create({
+          checkIfExistSocial(req, res, color, () => {
+            bdd.Social.create({
               email: req.body.email,
               access_token: randtoken.generate(32),
               epTitle: req.body.epTitle,
               podTitle: req.body.podTitle,
               imgLink: req.body.imgURL,
               audioLink: req.body.audioURL,
-              startTime: req.body.timestart,
-              color: color
-            }).then((preview) => {
+			  startTime: req.body.timestart,
+			  duration: req.body.duration
+            }).then((Social) => {
               initNewGeneration();
               res.sendFile(path.join(__dirname, "/web/done.html"))
             })
@@ -406,7 +406,7 @@ app.get("/social", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => { 
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
       if (GEN_PWD == "") {
-        bdd.Preview.count({
+        bdd.Social.count({
           where: {
             [Op.or]: [{status: "waiting"}, {status: "during"}]
           }
@@ -425,7 +425,7 @@ app.get("/social", csrfProtection, (req, res) => {
     
       } else {
         if (req.session.logged != undefined) {
-          bdd.Preview.count({
+          bdd.Social.count({
             where: {
               [Op.or]: [{status: "waiting"}, {status: "during"}]
             }
@@ -442,7 +442,7 @@ app.get("/social", csrfProtection, (req, res) => {
             res.send(mustache.render(template, render_object, partials))
           })
         } else {
-          res.redirect("/login?return=preview")
+          res.redirect("/login?return=social")
         }
       }
     })
@@ -565,17 +565,17 @@ app.get("/", csrfProtection, (req, res) => {
    })
 })
 
-app.get("/download/preview/:id", (req, res) => {
+app.get("/download/social/:id", (req, res) => {
   if (req.query.token != undefined) {
-    bdd.Preview.findByPk(req.params.id).then((preview) => {
-      if (req.query.token != preview.access_token) {
-        res.status(403).send("Vous n'avez pas accès à cette preview")
+    bdd.Social.findByPk(req.params.id).then((social) => {
+      if (req.query.token != social.access_token) {
+        res.status(403).send("Vous n'avez pas accès à cette vidéo pour réseaux sociaux")
       } else {
-        if (preview.status == 'finished') {
-          res.download(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${vpreviewideo.id}.mp4`), `youpod_preview_${preview.end_timestamp}.mp4`)
-        } else if (preview.status == 'deleted') {
+        if (social.status == 'finished') {
+          res.download(path.join(pathEvalute(process.env.EXPORT_FOLDER), `social_${social.id}.mp4`), `youpod_social_${social.end_timestamp}.mp4`)
+        } else if (social.status == 'deleted') {
           res.status(404).send("Cette vidéo à été supprimée du site!")
-        } else if (preview.status == 'during') {
+        } else if (social.status == 'during') {
           res.status(404).send("Cette vidéo est encore en cours de traitement, revenez plus tard!")
         } else {
           res.status(404).send("Cette vidéo est encore dans la file d'attente.")
@@ -850,8 +850,8 @@ function checkIfExistCustom(req, res, cb) {
   })
 }
 
-function checkIfExistPreview(req, res, color, cb) {
-  bdd.Preview.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.epImg, audioURL: req.body.audioURL, startTime: req.body.timestart, color: color, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
+function checkIfExistSocial(req, res, color, cb) {
+  bdd.Social.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.epImg, audioURL: req.body.audioURL, startTime: req.body.timestart, color: color, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
     if (video == null) {
       cb();
     } else {
@@ -999,9 +999,9 @@ function restartGeneration() {
     })
   })
 
-  bdd.Preview.findAll({where: {status: "during"}}).then((previews) => {
-    previews.forEach((p) => {
-      generateImgPreview(p.id);
+  bdd.Social.findAll({where: {status: "during"}}).then((socials) => {
+    socials.forEach((p) => {
+      generateImgSocial(p.id);
     })
   })
 
@@ -1031,22 +1031,22 @@ function flush() {
       }
     })
 
-    bdd.Preview.findAll({where: {status: "finished"}}).then((previews) => {
-      if (previews.length >=1) {
-        for (i = 0; i < previews.length; i++) {
-          time = Date.now() - previews[i].end_timestamp
+    bdd.Social.findAll({where: {status: "finished"}}).then((socials) => {
+      if (socials.length >=1) {
+        for (i = 0; i < socials.length; i++) {
+          time = Date.now() - socials[i].end_timestamp
           time = time / (1000 * 60 * 60);
       
           if (time > KEEPING_TIME) {
             try {
-              fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `preview_${previews[i].id}.mp4`))
+              fs.unlinkSync(path.join(pathEvalute(process.env.EXPORT_FOLDER), `social_${socials[i].id}.mp4`))
             } catch (err) {
-              console.log(`Fichier preview_${previews[i].id}.mp4 déjà supprimé`)
+              console.log(`Fichier social_${socials[i].id}.mp4 déjà supprimé`)
             }
 
-            previews[i].status = "deleted"
-            previews[i].save()
-            console.log("Flush preview " + previews[i].id)
+            socials[i].status = "deleted"
+            socials[i].save()
+            console.log("Flush social " + socials[i].id)
       
           }
         }
@@ -1076,14 +1076,14 @@ function initNewGeneration() {
     }))
   })
 
-  bdd.Preview.count({where: {status: "during"}}).then((nb) => {
+  bdd.Social.count({where: {status: "during"}}).then((nb) => {
     getOption("MAX_DURING_PREVIEW", ((MAX_DURING_PREVIEW) => {
       if (nb < MAX_DURING_PREVIEW) {
-        bdd.Preview.findOne({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((preview) => {
-          if (preview != null) {
-            preview.status = "during"
-            preview.save().then((preview) => {
-              generateImgPreview(preview.id);
+        bdd.Social.findOne({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((social) => {
+          if (social != null) {
+            social.status = "during"
+            social.save().then((social) => {
+              generateImgSocial(social.id);
             })
           }
         })
@@ -1092,21 +1092,21 @@ function initNewGeneration() {
   })
 }
 
-function generateImgPreview(id) {
-  console.log("Preview " + id + " Démarage de la création");
+function generateImgSocial(id) {
+  console.log("Social " + id + " Démarage de la création");
 
-  bdd.Preview.findByPk(id).then((preview) => {
-    var template = fs.readFileSync(path.join(__dirname, "/template/preview.mustache"), "utf8");
+  bdd.Social.findByPk(id).then((social) => {
+    var template = fs.readFileSync(path.join(__dirname, "/template/social.mustache"), "utf8");
 
     var renderObj = {
-      "imageURL": preview.imgLink,
-      "epTitle": preview.epTitle,
-      "podTitle": preview.podTitle
+      "imageURL": social.imgLink,
+      "epTitle": social.epTitle,
+      "podTitle": social.podTitle
     }
 
     string = mustache.render(template, renderObj);
 
-    console.log("Preview " + id + " Génération de l'image");
+    console.log("Social " + id + " Génération de l'image");
     
     (async () => {
       const browser = await puppeteer.launch({
@@ -1119,12 +1119,12 @@ function generateImgPreview(id) {
       });
       const page = await browser.newPage();
       await page.setContent(string);
-      await page.screenshot({path: path.join(__dirname, "/tmp/", `preview_${id}.png`), omitBackground: true});
+      await page.screenshot({path: path.join(__dirname, "/tmp/", `social_${id}.png`), omitBackground: true});
     
       await browser.close();
-      console.log("Preview " + id + " Image générée!")
+      console.log("Social " + id + " Image générée!")
 
-      downloadAudioPreview(id, preview.audioLink, preview.startTime, preview.color)
+      downloadAudioSocial(id, social.audioLink, social.startTime, social.color)
     })();
   })
 }
@@ -1238,12 +1238,12 @@ function generateFeed(feed_url, guid, temp, id, font) {
   })
 }
 
-function downloadAudioPreview(id, audio_url, time, color) {
-  console.log("Preview " + id + " Démarage du téléchargement")
+function downloadAudioSocial(id, audio_url, time, color) {
+  console.log("Social " + id + " Démarage du téléchargement")
   download(audio_url).then(data => {
-    fs.writeFileSync(path.join(__dirname, `/tmp/preview_${id}.mp3`), data);
-    console.log("Preview " + id + " Fichier téléchargé!");
-    generateVideoPreview(id, time, color);
+    fs.writeFileSync(path.join(__dirname, `/tmp/social_${id}.mp3`), data);
+    console.log("Social " + id + " Fichier téléchargé!");
+    generateVideoSocial(id, time, color);
   });
 }
 
@@ -1265,32 +1265,32 @@ function downloadAudio(id, audio_url, ep_title) {
   });
 }
 
-function generateVideoPreview(id, time, color) {
-  console.log("Preview" + id + " Démarage de la génération de la vidéo")
+function generateVideoSocial(id, time, color) {
+  console.log("Social" + id + " Démarage de la génération de la vidéo")
 
   s = parseInt(time.split(":")[0] * 60) + parseInt(time.split(":")[1])
 
-  var child = spawn("ffmpeg", ["-y", "-i", `./tmp/preview_${id}.png`, "-i", `./assets/${color}.mov`, "-filter_complex", 'overlay=0:0', "-ss", s, "-to", s + 20, "-i", `./tmp/preview_${id}.mp3`, "-shortest", "-acodec", "aac", `${process.env.EXPORT_FOLDER}/preview_${id}.mp4`]);
+  var child = spawn("ffmpeg", ["-y", "-i", `./tmp/social_${id}.png`, "-i", `./assets/${color}.mov`, "-filter_complex", 'overlay=0:0', "-ss", s, "-to", s + 20, "-i", `./tmp/social_${id}.mp3`, "-shortest", "-acodec", "aac", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
 
   child.stdout.on('data', function (data) {
-    console.log("Preview " +id + ' stdout: ' + data);
+    console.log("Social " +id + ' stdout: ' + data);
   });
 
   child.stderr.on('data', function (data) {
-    console.log("Preview " + id + ' stderr: ' + data);
+    console.log("Social " + id + ' stderr: ' + data);
   });
 
   child.on('close', function (code) {
-    console.log("Preview " + id + " Vidéo générée!")
-    bdd.Preview.update({ status: "finished", end_timestamp: Date.now() }, {
+    console.log("Social " + id + " Vidéo générée!")
+    bdd.Social.update({ status: "finished", end_timestamp: Date.now() }, {
       where: {
         id: id
       }
     }).then(() => {
-      fs.unlinkSync(path.join(__dirname, "/tmp/", `preview_${id}.png`))
-      fs.unlinkSync(path.join(__dirname, "/tmp/", `preview_${id}.mp3`))
+      fs.unlinkSync(path.join(__dirname, "/tmp/", `social_${id}.png`))
+      fs.unlinkSync(path.join(__dirname, "/tmp/", `social_${id}.mp3`))
   
-      sendMailPreview(id);
+      sendMailSocial(id);
       initNewGeneration();
     });
   });
@@ -1340,21 +1340,21 @@ function generateVideo(id, ep_title) {
   });
 }
 
-function sendMailPreview(id) {
-  bdd.Preview.findByPk(id).then((preview) => {
+function sendMailSocial(id) {
+  bdd.Social.findByPk(id).then((social) => {
     template = fs.readFileSync(path.join(__dirname, "/web/mail_custom.mustache"), "utf8")
     
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
       renderObj = {
-        "ep_title": preview.epTitle,
+        "ep_title": social.epTitle,
         "keeping_time": KEEPING_TIME,
-        "video_link": process.env.HOST + "/download/preview/" + id + "?token=" + preview.access_token
+        "video_link": process.env.HOST + "/download/social/" + id + "?token=" + social.access_token
       }
   
   
       const mailOptions = {
         from: 'YouPod@youpod.io', // sender address
-        to: preview.email, // list of receivers
+        to: social.email, // list of receivers
         subject: `Vidéo générée sur Youpod!`, // Subject line
         html: mustache.render(template, renderObj)
       };
@@ -1364,8 +1364,8 @@ function sendMailPreview(id) {
           if(err) return console.log(err)
         });
     
-        preview.email = "deleted"
-        preview.save();
+        social.email = "deleted"
+        social.save();
       })
     })
   })

@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const Preview = sequelize.define('Preview', {
+  const Preview = sequelize.define('Social', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -33,13 +33,12 @@ module.exports = (sequelize, DataTypes) => {
         isUrl: true
       }
     },
-    color: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
     startTime: {
       type: DataTypes.STRING
-    },
+	},
+	duration: {
+		type: DataTypes.STRING
+	},
     end_timestamp: {
       type: DataTypes.INTEGER
     },

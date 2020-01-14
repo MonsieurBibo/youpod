@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Previews', {
+    return queryInterface.createTable('Socials', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -34,11 +34,10 @@ module.exports = {
           isUrl: true
         }
       },
-      color: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
       startTime: {
+        type: Sequelize.STRING
+	  },
+	  duration: {
         type: Sequelize.STRING
       },
       end_timestamp: {
