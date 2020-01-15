@@ -18,7 +18,7 @@ GOOGLE_SECRET=`)
 db.sequelize.sync().then(()=> {
     console.log("Création des tables réussies!")
     db.Option.findOrCreate({where: {key: 'MAX_DURING'}, defaults: {value: '1'}}).then(() => {
-        db.Option.findOrCreate({where: {key: 'MAX_DURING_PREVIEW'}, defaults: {value: '1'}}).then(() => {
+        db.Option.findOrCreate({where: {key: 'MAX_DURING_SOCIAL'}, defaults: {value: '1'}}).then(() => {
             db.Option.findOrCreate({where: {key: 'KEEPING_TIME'}, defaults: {value: '12'}}).then(() => {
                 db.Option.findOrCreate({where: {key: 'MAIL_SERVICE'}, defaults: {value: 'gmail'}}).then(() => {
                     db.Option.findOrCreate({where: {key: 'SMTP_HOST'}, defaults: {value: 'send.example.com'}}).then(() => {

@@ -6,29 +6,32 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER
-    },
+	},
+	rss: {
+		type: DataTypes.STRING,
+		allowNull: false
+	},
+	guid: {
+		type: DataTypes.STRING
+	},
     email: {
       type: DataTypes.STRING,
       allowNull: false
     },
     epTitle: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
     podTitle: {
       type: DataTypes.STRING,
-      allowNull: false
     },
     imgLink: {
       type: DataTypes.STRING,
-      allowNull: false,
       validate: {
         isUrl: true
       }
     },
     audioLink: {
       type: DataTypes.STRING,
-      allowNull: false,
       validate: {
         isUrl: true
       }

@@ -7,6 +7,13 @@ module.exports = {
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
+	  },
+	  rss: {
+        type: Sequelize.STRING,
+        allowNull: false
+	  },
+	  guid: {
+        type: Sequelize.STRING,
       },
       email: {
         type: Sequelize.STRING,
@@ -14,22 +21,18 @@ module.exports = {
       },
       epTitle: {
         type: Sequelize.STRING,
-        allowNull: false,
       },
       podTitle: {
         type: Sequelize.STRING,
-        allowNull: false
       },
       imgLink: {
         type: Sequelize.STRING,
-        allowNull: false,
         validate: {
           isUrl: true
         }
       },
       audioLink: {
         type: Sequelize.STRING,
-        allowNull: false,
         validate: {
           isUrl: true
         }

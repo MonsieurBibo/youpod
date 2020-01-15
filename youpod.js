@@ -248,7 +248,7 @@ app.get("/admin", (req, res) => {
               size_export_folder = (size / 1024 / 1024).toFixed(2) + ' MB';
   
               getOption("MAX_DURING", (MAX_DURING) => {
-                getOption("MAX_DURING_PREVIEW", (MAX_DURING_PREVIEW) => {
+                getOption("MAX_DURING_SOCIAL", (MAX_DURING_SOCIAL) => {
                   getOption("KEEPING_TIME", (KEEPING_TIME) => {
                     getOption("GMAIL_ADDR", (GMAIL_ADDR) => {
                       getOption("GMAIL_PWD", (GMAIL_PWD) => {
@@ -269,7 +269,7 @@ app.get("/admin", (req, res) => {
                                               nb_rss_feed: nb_rss_feed,
                                               size_export_folder: size_export_folder,
                                               MAX_DURING: MAX_DURING,
-                                              MAX_DURING_PREVIEW: MAX_DURING_PREVIEW,
+                                              MAX_DURING_SOCIAL: MAX_DURING_SOCIAL,
                                               KEEPING_TIME: KEEPING_TIME,
                                               GMAIL_ADDR: GMAIL_ADDR,
                                               GMAIL_PWD: GMAIL_PWD,
@@ -342,63 +342,61 @@ app.post("/authenticate", csrfProtection, (req, res) => {
 
 app.post("/social/add", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => { 
-    if (GEN_PWD == "") {
-      if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined) {
-        if (req.body.color == undefined) {
-          color = "blanc"
-        } else {
-          color = req.body.color
-        }
-  
-        checkIfExistSocial(req, res, color, () => {
-          bdd.Social.create({
-            email: req.body.email,
-            access_token: randtoken.generate(32),
-            epTitle: req.body.epTitle,
-            podTitle: req.body.podTitle,
-            imgLink: req.body.imgURL,
-            audioLink: req.body.audioURL,
-            startTime: req.body.timestart,
-            color: color
-          }).then((social) => {
-            initNewGeneration();
-            res.sendFile(path.join(__dirname, "/web/done.html"))
-          })
-        })
-      } else {
-        res.status(400).send("Votre requète n'est pas complète...")
-      }
-    } else {
-      if (req.session.logged != undefined) {
-        if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined) {
-          if (req.body.color == undefined) {
-            color = "blanc"
-          } else {
-            color = req.body.color
-          }
-          
-          checkIfExistSocial(req, res, color, () => {
-            bdd.Social.create({
-              email: req.body.email,
-              access_token: randtoken.generate(32),
-              epTitle: req.body.epTitle,
-              podTitle: req.body.podTitle,
-              imgLink: req.body.imgURL,
-              audioLink: req.body.audioURL,
-			  startTime: req.body.timestart,
-			  duration: req.body.duration
-            }).then((Social) => {
-              initNewGeneration();
-              res.sendFile(path.join(__dirname, "/web/done.html"))
-            })
-          })
-        } else {
-          res.status(400).send("Votre requète n'est pas complète...")
-        }
-      } else {
-        res.redirect("/login")
-      }
-    }
+	checkIfRss(req.body.rss, (isRss) => {
+		if(isRss) {
+			if (req.body.email != undefined && req.body.timestart != undefined && req.body.duration != undefined) {
+				if (GEN_PWD == "") {
+					getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
+						checkIfExistSocial(req, res, guid, () => {
+							bdd.Social.create({
+								rss: req.body.rss,
+								email: req.body.email,
+								access_token: randtoken.generate(32),
+								startTime: req.body.timestart,
+								duration: req.body.duration,
+								guid: guid
+							}).then((social) => {
+								initNewGeneration();
+								res.sendFile(path.join(__dirname, "/web/done.html"))
+							})
+						})
+					})
+				} else {
+					if (req.session.logged != undefined) {
+						getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
+							checkIfExistSocial(req, res, guid, () => {
+								bdd.Social.create({
+									rss: req.body.rss,
+									email: req.body.email,
+									access_token: randtoken.generate(32),
+									startTime: req.body.timestart,
+									duration: req.body.duration,
+									guid: guid
+								}).then((social) => {
+									initNewGeneration();
+									res.sendFile(path.join(__dirname, "/web/done.html"))
+								})
+							})
+						})
+					} else {
+						res.redirect("/login")
+					}
+				}
+			} else {
+				res.status(400).send("Votre requète n'est pas complète...")
+			}
+
+		} else {
+			template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
+		
+			var render_object = {
+			"err_message": "L'URL que vous avez entré " + req.body.rss + " n'est pas un flux RSS valide!"
+			}
+		
+			res.setHeader("content-type", "text/html");
+			res.send(mustache.render(template, render_object))
+		}
+	}) 
   })
 })
 
@@ -621,45 +619,25 @@ app.post("/addvideo", csrfProtection, (req, res) => {
       if (req.body.email != undefined && req.body.rss != undefined) {
         checkIfRss(req.body.rss, (is_rss) => {
           if (is_rss) {
-            if (req.body.selectEp == undefined) {
-              getLastGuid(req.body.rss, (guid)=> {
-                checkIfExistVideo(req, res, guid, () => {
-                  bdd.Video.create({
-                    email: req.body.email,
-                    rss: req.body.rss,
-                    guid: guid,
-                    template: req.body.template,
-                    access_token: randtoken.generate(32),
-                    font:req.body["font-choice"],
-                    googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
-                  }).then((video) => {
-                      req.session.google_code = undefined
-                      req.session.save((err) => {
-                        initNewGeneration();
-                        res.sendFile(path.join(__dirname, "/web/done.html"))
-                      })
-                  })
-                })
-              })
-            } else {
-              checkIfExistVideo(req, res, req.body.selectEp, () => {
-                bdd.Video.create({
-                  email: req.body.email,
-                  rss: req.body.rss,
-                  guid: req.body.selectEp,
-                  template: req.body.template,
-                  access_token: randtoken.generate(32),
-                  font:req.body["font-choice"],
-                  googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
-                }).then((video) => {
-                  req.session.google_code = undefined
-                  req.session.save((err) => {
-                    initNewGeneration();
-                    res.sendFile(path.join(__dirname, "/web/done.html"))
-                  })
-                })
-              })
-            }
+			getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
+				checkIfExistVideo(req, res, guid, () => {
+					bdd.Video.create({
+					email: req.body.email,
+					rss: req.body.rss,
+					guid: guid,
+					template: req.body.template,
+					access_token: randtoken.generate(32),
+					font:req.body["font-choice"],
+					googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
+					}).then((video) => {
+						req.session.google_code = undefined
+						req.session.save((err) => {
+						initNewGeneration();
+						res.sendFile(path.join(__dirname, "/web/done.html"))
+						})
+					})
+				})
+			})
           } else {
             template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
       
@@ -757,11 +735,15 @@ function checkIfExistVideo(req, res, guid, cb) {
   })
 }
 
-function getLastGuid(feed_url, __callback) {
-  parser.parseURL(feed_url, (err, feed) => {
-    __callback(feed.items[0].guid)
-    
-  })
+function getLastGuid(feed_url, guid, __callback) {
+	if (guid != undefined) {
+		__callback(guid)
+	} else {
+		parser.parseURL(feed_url, (err, feed) => {
+			__callback(feed.items[0].guid)
+			
+		  })
+	}
 }
 
 function checkIfRss(feed_url, __callback) {
@@ -850,8 +832,25 @@ function checkIfExistCustom(req, res, cb) {
   })
 }
 
-function checkIfExistSocial(req, res, color, cb) {
-  bdd.Social.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.epImg, audioURL: req.body.audioURL, startTime: req.body.timestart, color: color, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
+function checkIfExistSocial(req, res, guid, cb) {
+	bdd.Social.findOne({where: {email: req.body.email, rss: req.body.rss, guid:guid, startTime: req.body.timestart, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
+		if (video == null) {
+		  cb();
+		} else {
+		  template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
+	
+		  var render_object = {
+			"err_message": "Cette préview est déjà dans la liste d'attente!"
+		  }
+		
+		  res.setHeader("content-type", "text/html");
+		  res.send(mustache.render(template, render_object))
+		}
+	  })
+}
+
+function checkIfExistSocialCustom(req, res, cb) {
+  bdd.Social.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.epImg, audioURL: req.body.audioURL, startTime: req.body.timestart, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
     if (video == null) {
       cb();
     } else {
@@ -1001,7 +1000,9 @@ function restartGeneration() {
 
   bdd.Social.findAll({where: {status: "during"}}).then((socials) => {
     socials.forEach((p) => {
-      generateImgSocial(p.id);
+		if (p.rss != "__custom__") {
+			generateImgSocial(p.rss, p.guid, p.id);
+		}
     })
   })
 
@@ -1077,13 +1078,15 @@ function initNewGeneration() {
   })
 
   bdd.Social.count({where: {status: "during"}}).then((nb) => {
-    getOption("MAX_DURING_PREVIEW", ((MAX_DURING_PREVIEW) => {
-      if (nb < MAX_DURING_PREVIEW) {
+    getOption("MAX_DURING_SOCIAL", ((MAX_DURING_SOCIAL) => {
+      if (nb < MAX_DURING_SOCIAL) {
         bdd.Social.findOne({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((social) => {
           if (social != null) {
             social.status = "during"
             social.save().then((social) => {
-              generateImgSocial(social.id);
+				if (social.rss != "__custom__") {
+					generateImgSocial(social.rss, social.guid, social.id);
+				}
             })
           }
         })
@@ -1092,7 +1095,65 @@ function initNewGeneration() {
   })
 }
 
-function generateImgSocial(id) {
+function generateImgSocial(feed_url, guid, id) {
+	console.log("Social " + id + " Démarage de la création")
+	parser.parseURL(feed_url, (err, lFeed) => {
+		console.log("Social " + id + " Récupération du flux")
+		feed = lFeed
+
+		var template = fs.readFileSync(path.join(__dirname, "/template/social.mustache"), "utf8");
+	
+		i = 0;
+		while(feed.items[i].guid != guid && i < feed.items.length) {
+			i++;
+		}
+	
+		if (i == feed.items.length) {
+			bdd.Social.update({ status: "error", email: "error" }, {
+			where: {
+				id: id
+			}
+			})
+			return;
+		}
+	
+		if(feed.items[i].itunes.image == undefined) {
+			img = feed.image.link
+		} else {
+			img = feed.items[i].itunes.image
+		}
+	
+		var renderObj = {
+			"imageURL": img,
+			"epTitle": feed.items[i].title,
+			"podTitle": feed.title
+		}
+	
+		string = mustache.render(template, renderObj);
+	
+		console.log("Social " + id + " Génération de l'image");
+		
+		(async () => {
+			const browser = await puppeteer.launch({
+			defaultViewport: {
+				width: 1080,
+				height: 1080
+			},
+			headless: true,
+			args: ['--no-sandbox']
+			});
+			const page = await browser.newPage();
+			await page.setContent(string);
+			await page.screenshot({path: path.join(__dirname, "/tmp/", `social_${id}.png`), omitBackground: true});
+		
+			await browser.close();
+			console.log("Social " + id + " Image générée!")
+			downloadAudioSocial(id, feed.items[i].enclosure.url)
+		})();
+	})
+  }
+
+function generateImgSocialCustom(id) {
   console.log("Social " + id + " Démarage de la création");
 
   bdd.Social.findByPk(id).then((social) => {
@@ -1238,12 +1299,12 @@ function generateFeed(feed_url, guid, temp, id, font) {
   })
 }
 
-function downloadAudioSocial(id, audio_url, time, color) {
+function downloadAudioSocial(id, audio_url) {
   console.log("Social " + id + " Démarage du téléchargement")
   download(audio_url).then(data => {
     fs.writeFileSync(path.join(__dirname, `/tmp/social_${id}.mp3`), data);
     console.log("Social " + id + " Fichier téléchargé!");
-    generateVideoSocial(id, time, color);
+    generateVideoSocial(id);
   });
 }
 
@@ -1265,35 +1326,37 @@ function downloadAudio(id, audio_url, ep_title) {
   });
 }
 
-function generateVideoSocial(id, time, color) {
+function generateVideoSocial(id) {
   console.log("Social" + id + " Démarage de la génération de la vidéo")
 
-  s = parseInt(time.split(":")[0] * 60) + parseInt(time.split(":")[1])
+  bdd.Social.findByPk(id).then((social) => {
+	s = parseInt(social.startTime.split(":")[0] * 60) + parseInt(social.startTime.split(":")[1])
 
-  var child = spawn("ffmpeg", ["-y", "-i", `./tmp/social_${id}.png`, "-i", `./assets/${color}.mov`, "-filter_complex", 'overlay=0:0', "-ss", s, "-to", s + 20, "-i", `./tmp/social_${id}.mp3`, "-shortest", "-acodec", "aac", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
-
-  child.stdout.on('data', function (data) {
-    console.log("Social " +id + ' stdout: ' + data);
-  });
-
-  child.stderr.on('data', function (data) {
-    console.log("Social " + id + ' stderr: ' + data);
-  });
-
-  child.on('close', function (code) {
-    console.log("Social " + id + " Vidéo générée!")
-    bdd.Social.update({ status: "finished", end_timestamp: Date.now() }, {
-      where: {
-        id: id
-      }
-    }).then(() => {
-      fs.unlinkSync(path.join(__dirname, "/tmp/", `social_${id}.png`))
-      fs.unlinkSync(path.join(__dirname, "/tmp/", `social_${id}.mp3`))
+	var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/social_${id}.png`, "-filter_complex", 'overlay', "-vcodec", "libvpx-vp9", "-stream_loop", -1, "-i", `./assets/bars.webm`, "-ss", s, "-i", `./tmp/social_${id}.mp3`, "-t", social.duration, "-map", "2:a", "-acodec", "aac", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
   
-      sendMailSocial(id);
-      initNewGeneration();
-    });
-  });
+	child.stdout.on('data', function (data) {
+	  console.log("Social " +id + ' stdout: ' + data);
+	});
+  
+	child.stderr.on('data', function (data) {
+	  console.log("Social " + id + ' stderr: ' + data);
+	});
+  
+	child.on('close', function (code) {
+	  console.log("Social " + id + " Vidéo générée!")
+	  bdd.Social.update({ status: "finished", end_timestamp: Date.now() }, {
+		where: {
+		  id: id
+		}
+	  }).then(() => {
+		fs.unlinkSync(path.join(__dirname, "/tmp/", `social_${id}.png`))
+		fs.unlinkSync(path.join(__dirname, "/tmp/", `social_${id}.mp3`))
+	
+		sendMailSocial(id);
+		initNewGeneration();
+	  });
+	});
+  })
 }
 
 function generateVideo(id, ep_title) {

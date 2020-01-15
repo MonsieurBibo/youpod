@@ -92,7 +92,7 @@
     <!-- Custom styles for this template -->
     <link href="/static/floating-labels.css" rel="stylesheet">
   <body>
-    <form class="form-signin" action="/addvideo" method="POST">
+    <form class="form-signin" action="/social/add" method="POST">
       <input type="hidden" name="_csrf" value="{{csrfToken}}">
       <div class="text-center mb-4">
         <img class="mb-4" src="/static/logo.png" alt="YouPod" width="300" height="69">
@@ -129,8 +129,8 @@
       </div>
 
 	<div class="form-label-group">
-        <input type="number" id="duration" name="duration" class="form-control" placeholder="0" min="0" max="59" required autofocus>
-        <label for="duration">Durée</label>
+        <input type="number" id="duration" name="duration" class="form-control" placeholder="0" min="0" max="119" required autofocus>
+        <label for="duration">Durée (En secondes, maximum 119s)</label>
       </div>
 
       <div class="form-label-group">
