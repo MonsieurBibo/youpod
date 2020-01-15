@@ -65,10 +65,6 @@
       font-size: 80%;
     }
 
-    .switch{
-      margin-left: 19%;
-    }
-
      .font-test{
     background-color: white;
     margin-top: 1rem;
@@ -104,12 +100,20 @@
         <small>Une fois la vidéo générée, vous receverez un email contenant le lien pour la télécharger. Vous aurez alors <strong>{{ keeping_time }}H</strong> pour la télécharger.</small>
       </div>
 
+		<center>
+        <div class="switch">
+        <p>
+          <button class="btn btn-large btn-primary" type="button">Générer une vidéo</button>
+          <a href="/social"><button class="btn btn-large" type="button">Générer un aperçu</button> </a>
+        </p>
+        </div>
         <div class="switch">
         <p>
           <button class="btn btn-large btn-primary" type="button">Avec un RSS</button>
           <a href="./custom"><button class="btn btn-large" type="button">Avec un MP3</button> </a>
         </p>
         </div>
+		</center>
 
       {{#ENABLE_YOUTUBE}}
         {{^yt_logged}}
