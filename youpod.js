@@ -1419,7 +1419,7 @@ function sendMailSocial(id) {
       const mailOptions = {
         from: 'YouPod@youpod.io', // sender address
         to: social.email, // list of receivers
-        subject: `Vidéo générée sur Youpod!`, // Subject line
+        subject: `Extrait généré sur Youpod!`, // Subject line
         html: mustache.render(template, renderObj)
       };
 
