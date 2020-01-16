@@ -1330,7 +1330,13 @@ function generateVideoSocial(id) {
   console.log("Social" + id + " Démarage de la génération de la vidéo")
 
   bdd.Social.findByPk(id).then((social) => {
-	s = parseInt(social.startTime.split(":")[0] * 60) + parseInt(social.startTime.split(":")[1])
+	splited = social.startTime.split(":")
+
+	console.log(splited)
+	s = splited[0] * 3600 + splited[1] * 60 + parseInt(splited[2])
+
+	console.log(s)
+	console.log(social.duration)
 
 	var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/social_${id}.png`, "-filter_complex", 'overlay', "-vcodec", "libvpx-vp9", "-stream_loop", -1, "-i", `./assets/bars.webm`, "-ss", s, "-i", `./tmp/social_${id}.mp3`, "-t", social.duration, "-map", "2:a", "-acodec", "aac", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
   
