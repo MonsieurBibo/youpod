@@ -1414,11 +1414,11 @@ function generateVideo(id, ep_title) {
 
 function sendMailSocial(id) {
   bdd.Social.findByPk(id).then((social) => {
-    template = fs.readFileSync(path.join(__dirname, "/web/mail_custom.mustache"), "utf8")
+    template = fs.readFileSync(path.join(__dirname, "/web/mail_social.mustache"), "utf8")
     
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
       renderObj = {
-        "ep_title": social.epTitle,
+        "feed_url": social.rss,
         "keeping_time": KEEPING_TIME,
         "video_link": process.env.HOST + "/download/social/" + id + "?token=" + social.access_token
       }
