@@ -49,7 +49,9 @@ restartGeneration();
 var parser = new Parser();
 
 app.get("/yt/login", (req, res) => {
-  res.redirect(yt.google_url)
+	yt.getGoogleUrl((url) => {
+		res.redirect(url)
+	})
 })
 
 app.get("/yt/redirect", (req, res) => {
@@ -255,46 +257,52 @@ app.get("/admin", (req, res) => {
                         getOption("GEN_PWD", (GEN_PWD) => {
                           getOption("API_PWD", (API_PWD) => {
                             getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
-                              getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
-                                getOption("MAIL_SERVICE", (MAIL_SERVICE) => {
-                                  getOption("SMTP_HOST", (SMTP_HOST) => {
-                                    getOption("SMTP_PORT", (SMTP_PORT) => {
-                                      getOption("SMTP_USERNAME", (SMTP_USERNAME) => {
-                                        getOption("SMTP_PASSWORD", (SMTP_PASSWORD) => {
-                                          getOption("SMTP_DOMAIN", (SMTP_DOMAIN) => {
-                                            var render_object = {
-                                              nb_gen_video: nb_gen_video,
-                                              nb_save_video: nb_save_video,
-                                              nb_waiting_video: nb_waiting_video,
-                                              nb_rss_feed: nb_rss_feed,
-                                              size_export_folder: size_export_folder,
-                                              MAX_DURING: MAX_DURING,
-                                              MAX_DURING_SOCIAL: MAX_DURING_SOCIAL,
-                                              KEEPING_TIME: KEEPING_TIME,
-                                              GMAIL_ADDR: GMAIL_ADDR,
-                                              GMAIL_PWD: GMAIL_PWD,
-                                              GEN_PWD: GEN_PWD,
-                                              API_PWD: API_PWD,
-                                              GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
-                                              IS_GMAIL: MAIL_SERVICE == "gmail" ?  MAIL_SERVICE : undefined,
-                                              SMTP_HOST: SMTP_HOST,
-                                              SMTP_DOMAIN: SMTP_DOMAIN,
-                                              SMTP_PORT: SMTP_PORT,
-                                              SMTP_USERNAME: SMTP_USERNAME,
-                                              SMTP_PASSWORD: SMTP_PASSWORD,
-                                              ENABLE_YOUTUBE: ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
-                                              youpod_version: package.version
-                                            }
-                                          
-                                            res.setHeader("content-type", "text/html");
-                                            res.send(mustache.render(template, render_object, partials))
-                                          })
-                                        })
-                                      })
-                                    })
-                                  })
-                                })
-                              })
+								getOption("GOOGLE_ID", (GOOGLE_ID) => {
+									getOption("GOOGLE_SECRET", (GOOGLE_SECRET) => {
+										getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
+											getOption("MAIL_SERVICE", (MAIL_SERVICE) => {
+											  getOption("SMTP_HOST", (SMTP_HOST) => {
+												getOption("SMTP_PORT", (SMTP_PORT) => {
+												  getOption("SMTP_USERNAME", (SMTP_USERNAME) => {
+													getOption("SMTP_PASSWORD", (SMTP_PASSWORD) => {
+													  getOption("SMTP_DOMAIN", (SMTP_DOMAIN) => {
+														var render_object = {
+														  nb_gen_video: nb_gen_video,
+														  nb_save_video: nb_save_video,
+														  nb_waiting_video: nb_waiting_video,
+														  nb_rss_feed: nb_rss_feed,
+														  size_export_folder: size_export_folder,
+														  MAX_DURING: MAX_DURING,
+														  MAX_DURING_SOCIAL: MAX_DURING_SOCIAL,
+														  KEEPING_TIME: KEEPING_TIME,
+														  GMAIL_ADDR: GMAIL_ADDR,
+														  GMAIL_PWD: GMAIL_PWD,
+														  GEN_PWD: GEN_PWD,
+														  API_PWD: API_PWD,
+														  GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
+														  GOOGLE_ID: GOOGLE_ID,
+														  GOOGLE_SECRET: GOOGLE_SECRET,
+														  IS_GMAIL: MAIL_SERVICE == "gmail" ?  MAIL_SERVICE : undefined,
+														  SMTP_HOST: SMTP_HOST,
+														  SMTP_DOMAIN: SMTP_DOMAIN,
+														  SMTP_PORT: SMTP_PORT,
+														  SMTP_USERNAME: SMTP_USERNAME,
+														  SMTP_PASSWORD: SMTP_PASSWORD,
+														  ENABLE_YOUTUBE: ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+														  youpod_version: package.version
+														}
+													  
+														res.setHeader("content-type", "text/html");
+														res.send(mustache.render(template, render_object, partials))
+													  })
+													})
+												  })
+												})
+											  })
+											})
+										  })
+									})
+								})
                             })
                           })
                         })

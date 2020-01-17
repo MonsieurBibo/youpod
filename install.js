@@ -10,9 +10,7 @@ PORT=5674
 HOST=http://localhost:5674
 EXPORT_FOLDER=./video
 ADMIN_PWD=123456
-COOKIE_SECRET=IDK
-GOOGLE_ID=
-GOOGLE_SECRET=`)
+COOKIE_SECRET=IDK`)
 }
 
 db.sequelize.sync().then(()=> {
@@ -30,8 +28,12 @@ db.sequelize.sync().then(()=> {
                                             db.Option.findOrCreate({where: {key: 'GMAIL_PWD'}, defaults: {value: '123456'}}).then(() => {
                                                 db.Option.findOrCreate({where: {key: 'GEN_PWD'}, defaults: {value: ''}}).then(() => {
                                                     db.Option.findOrCreate({where: {key: 'API_PWD'}, defaults: {value: '123456'}}).then(() => {
-                                                        db.Option.findOrCreate({where: {key: 'GOOGLE_FONT_KEY'}, defaults: {value: ''}}).then(() => {
-                                                            db.Option.findOrCreate({where: {key: 'ENABLE_YOUTUBE'}, defaults: {value: 'true'}})
+                                                        db.Option.findOrCreate({where: {key: 'GOOGLE_FONT_KEY'}, defaults: {value: '123456'}}).then(() => {
+															db.Option.findOrCreate({where: {key: 'GOOGLE_ID'}, defaults: {value: '123456'}}).then(() => {
+																db.Option.findOrCreate({where: {key: 'GOOGLE_SECRET'}, defaults: {value: '123456'}}).then(() => {
+																	db.Option.findOrCreate({where: {key: 'ENABLE_YOUTUBE'}, defaults: {value: 'false'}})
+																})
+															})
                                                         })
                                                     })
                                                 })

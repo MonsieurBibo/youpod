@@ -260,9 +260,19 @@
     </div>
 
     <div class="form-label-group" data-children-count="1">
-        <input type="text" name="GOOGLE_FONT_KEY" id="GOOGLE_FONT_KEY" value="{{ GOOGLE_FONT_KEY }}"class="form-control" placeholder="Mot de passe de l'API" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
+        <input type="text" name="GOOGLE_FONT_KEY" id="GOOGLE_FONT_KEY" value="{{ GOOGLE_FONT_KEY }}"class="form-control" placeholder="Mot de passe de l'API Google Font" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
         <label for="GOOGLE_FONT_KEY">Mot de passe de l'API Google Font</label>
         <small class="form-text text-muted"><a href="https://developers.google.com/fonts/docs/developer_api#APIKey">Récupérer votre clé</a></small>
+    </div>
+
+	<div class="form-label-group" data-children-count="1">
+        <input type="text" name="GOOGLE_ID" id="GOOGLE_ID" value="{{ GOOGLE_ID }}"class="form-control" placeholder="ID Client Google" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
+        <label for="GOOGLE_ID">ID Client Google</label>
+    </div>
+
+	<div class="form-label-group" data-children-count="1">
+        <input type="text" name="GOOGLE_SECRET" id="GOOGLE_SECRET" value="{{ GOOGLE_SECRET }}"class="form-control" placeholder="Code secret du client Google" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
+        <label for="GOOGLE_SECRET">Code secret du client Google</label>
     </div>
 
     <button class="btn btn-lg btn-primary btn-block" onclick="submitForm()">Sauvegarder</button>
