@@ -5,7 +5,8 @@ var mini_slider = document.getElementById("mini_slider")
 selectEp = document.getElementById("selectEp")
 selectEp.addEventListener("change", changeSelect)
 audioPreview = document.getElementById("audioPreview")
-audioPreview.addEventListener("canplay", initSlider)
+audioSelect = document.getElementById("audioSelect")
+audioPreview.addEventListener("loadedmetadata", initSlider)
 data = {}
 
 document.getElementById("timestart").addEventListener("change", updateStart)
@@ -126,6 +127,7 @@ function changeSelect() {
 	}
 
 	audioPreview.src = data[i].audio
+	audioSelect.src = data[i].audio
 }
 
 function initSlider() {
@@ -174,15 +176,15 @@ function updateDuration() {
 function playSound() {
 	btn = document.getElementById("buttonPlay")
 
-	if (btn.innerHTML == "Jouer") {
+	if (btn.innerHTML == "Ecouter l'extrait") {
 		audioPreview.currentTime = hms_format.from(mini_slider.noUiSlider.get()[0])
 		audioPreview.play()
 		interval_check = setInterval(checkFinish, 500);
-		btn.innerHTML = "Arrêter"
+		btn.innerHTML = "Arrêter l'écoute"
 	} else {
 		clearInterval(interval_check)
 		audioPreview.pause()
-		btn.innerHTML = "Jouer"
+		btn.innerHTML = "Ecouter l'extrait"
 	}
 
 }
@@ -191,6 +193,11 @@ function checkFinish(checkFinish) {
 	if (audioPreview.currentTime - hms_format.from(mini_slider.noUiSlider.get()[0]) > document.getElementById("duration").value) {
 		clearInterval(interval_check)
 		audioPreview.pause()
-		btn.innerHTML = "Jouer"
+		btn.innerHTML = "Ecouter l'extrait"
 	}
+}
+
+function setStart() {
+	slider.noUiSlider.set(audioSelect.currentTime - 60)
+	mini_slider.noUiSlider.set([audioSelect.currentTime, audioSelect.currentTime + 60])
 }
