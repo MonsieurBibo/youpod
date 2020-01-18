@@ -7,6 +7,7 @@
 - Social Custom
 - Option de police déplacée dans option avancée
 - Social sur le dashboard admin
+- Un des slider a été masqué
 
 #### Corrections
 - Changement sur le mail pour les social
