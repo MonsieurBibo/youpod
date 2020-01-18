@@ -1,6 +1,6 @@
 {
   "name": "youpod",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Youpod, un utilitaire pour générer vos vidéos pour Youtube à partir de votre podcast",
   "main": "youpod.js",
   "scripts": {

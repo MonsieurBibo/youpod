@@ -1099,9 +1099,10 @@ app.get("/api/feed", (req, res) => {
         feed.items.forEach((i) => {
           o = {
             title: i.title,
-            guid: i.guid.replace("<![CDATA[", "").replace("]]>", ""),
-            audio: i.enclosure.url
-          }
+            guid: i.guid.replace("<![CDATA[", "").replace("]]>", "")
+		  }
+		  
+		  o.audio = i.enclosure == undefined ? undefined : i.enclosure.url
     
           resObj.data.push(o)
         })

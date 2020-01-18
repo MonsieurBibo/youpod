@@ -1,5 +1,10 @@
 # Changelog
 ## Version 1.2
+### Version 1.2.3
+#### Corrections
+- Bug dans la recherche dans le flux quand l'épisode ne contenait pas d'enclosure
+- Corrections fautes dans le mail
+
 ### Version 1.2.2
 #### Ajouts
 - Clé de l'API google sur l'admin
