@@ -523,7 +523,7 @@ app.get("/social/custom", csrfProtection, (req, res) => {
 				[Op.or]: [{status: "waiting"}, {status: "during"}]
 			  }
 			}).then((nb) => {
-			  template = fs.readFileSync(path.join(__dirname, "/web/social.mustache"), "utf8")
+			  template = fs.readFileSync(path.join(__dirname, "/web/social_custom.mustache"), "utf8")
 		
 			  var render_object = {
 				"waiting_list": nb,
