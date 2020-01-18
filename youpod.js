@@ -265,90 +265,95 @@ app.get("/admin", (req, res) => {
   if (req.session.loggin_admin != undefined) {
     template = fs.readFileSync(path.join(__dirname, "/web/admin.mustache"), "utf8")
 
-    bdd.Video.count({where: {
-      [Op.or]: [{status: "finished"}, {status: "deleted"}]
-    }}).then((nb_gen_video) => {
-      bdd.Video.count({where: {
-        status: "finished"
-      }}).then((nb_save_video) => {
-        bdd.Video.count({where: {
-          [Op.or]: [{status: "waiting"}, {status: "during"}]
-        }}).then((nb_waiting_video) => {
-          bdd.sequelize.query(`SELECT DISTINCT rss FROM Videos`, { raw: true }).then(function(rows){
-            nb_rss_feed = rows[0].length
-  
-            getSize(pathEvalute(process.env.EXPORT_FOLDER), (err, size) => {
-              if (err) { throw err; }
-             
-              size_export_folder = (size / 1024 / 1024).toFixed(2) + ' MB';
-  
-              getOption("MAX_DURING", (MAX_DURING) => {
-                getOption("MAX_DURING_SOCIAL", (MAX_DURING_SOCIAL) => {
-                  getOption("KEEPING_TIME", (KEEPING_TIME) => {
-                    getOption("GMAIL_ADDR", (GMAIL_ADDR) => {
-                      getOption("GMAIL_PWD", (GMAIL_PWD) => {
-                        getOption("GEN_PWD", (GEN_PWD) => {
-                          getOption("API_PWD", (API_PWD) => {
-                            getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
-								getOption("GOOGLE_ID", (GOOGLE_ID) => {
-									getOption("GOOGLE_SECRET", (GOOGLE_SECRET) => {
-										getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
-											getOption("MAIL_SERVICE", (MAIL_SERVICE) => {
-											  getOption("SMTP_HOST", (SMTP_HOST) => {
-												getOption("SMTP_PORT", (SMTP_PORT) => {
-												  getOption("SMTP_USERNAME", (SMTP_USERNAME) => {
-													getOption("SMTP_PASSWORD", (SMTP_PASSWORD) => {
-													  getOption("SMTP_DOMAIN", (SMTP_DOMAIN) => {
-														var render_object = {
-														  nb_gen_video: nb_gen_video,
-														  nb_save_video: nb_save_video,
-														  nb_waiting_video: nb_waiting_video,
-														  nb_rss_feed: nb_rss_feed,
-														  size_export_folder: size_export_folder,
-														  MAX_DURING: MAX_DURING,
-														  MAX_DURING_SOCIAL: MAX_DURING_SOCIAL,
-														  KEEPING_TIME: KEEPING_TIME,
-														  GMAIL_ADDR: GMAIL_ADDR,
-														  GMAIL_PWD: GMAIL_PWD,
-														  GEN_PWD: GEN_PWD,
-														  API_PWD: API_PWD,
-														  GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
-														  GOOGLE_ID: GOOGLE_ID,
-														  GOOGLE_SECRET: GOOGLE_SECRET,
-														  IS_GMAIL: MAIL_SERVICE == "gmail" ?  MAIL_SERVICE : undefined,
-														  SMTP_HOST: SMTP_HOST,
-														  SMTP_DOMAIN: SMTP_DOMAIN,
-														  SMTP_PORT: SMTP_PORT,
-														  SMTP_USERNAME: SMTP_USERNAME,
-														  SMTP_PASSWORD: SMTP_PASSWORD,
-														  ENABLE_YOUTUBE: ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
-														  youpod_version: package.version
-														}
-													  
-														res.setHeader("content-type", "text/html");
-														res.send(mustache.render(template, render_object, partials))
+	bdd.Social.count({where: {
+		[Op.or]: [{status: "finished"}, {status: "deleted"}]
+	}}).then((nb_gen_social) => {
+		bdd.Video.count({where: {
+			[Op.or]: [{status: "finished"}, {status: "deleted"}]
+		  }}).then((nb_gen_video) => {
+			bdd.Video.count({where: {
+			  status: "finished"
+			}}).then((nb_save_video) => {
+			  bdd.Video.count({where: {
+				[Op.or]: [{status: "waiting"}, {status: "during"}]
+			  }}).then((nb_waiting_video) => {
+				bdd.sequelize.query(`SELECT DISTINCT rss FROM Videos`, { raw: true }).then(function(rows){
+				  nb_rss_feed = rows[0].length
+		
+				  getSize(pathEvalute(process.env.EXPORT_FOLDER), (err, size) => {
+					if (err) { throw err; }
+				   
+					size_export_folder = (size / 1024 / 1024).toFixed(2) + ' MB';
+		
+					getOption("MAX_DURING", (MAX_DURING) => {
+					  getOption("MAX_DURING_SOCIAL", (MAX_DURING_SOCIAL) => {
+						getOption("KEEPING_TIME", (KEEPING_TIME) => {
+						  getOption("GMAIL_ADDR", (GMAIL_ADDR) => {
+							getOption("GMAIL_PWD", (GMAIL_PWD) => {
+							  getOption("GEN_PWD", (GEN_PWD) => {
+								getOption("API_PWD", (API_PWD) => {
+								  getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
+									  getOption("GOOGLE_ID", (GOOGLE_ID) => {
+										  getOption("GOOGLE_SECRET", (GOOGLE_SECRET) => {
+											  getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
+												  getOption("MAIL_SERVICE", (MAIL_SERVICE) => {
+													getOption("SMTP_HOST", (SMTP_HOST) => {
+													  getOption("SMTP_PORT", (SMTP_PORT) => {
+														getOption("SMTP_USERNAME", (SMTP_USERNAME) => {
+														  getOption("SMTP_PASSWORD", (SMTP_PASSWORD) => {
+															getOption("SMTP_DOMAIN", (SMTP_DOMAIN) => {
+															  var render_object = {
+																  nb_gen_social: nb_gen_social,
+																nb_gen_video: nb_gen_video,
+																nb_save_video: nb_save_video,
+																nb_waiting_video: nb_waiting_video,
+																nb_rss_feed: nb_rss_feed,
+																size_export_folder: size_export_folder,
+																MAX_DURING: MAX_DURING,
+																MAX_DURING_SOCIAL: MAX_DURING_SOCIAL,
+																KEEPING_TIME: KEEPING_TIME,
+																GMAIL_ADDR: GMAIL_ADDR,
+																GMAIL_PWD: GMAIL_PWD,
+																GEN_PWD: GEN_PWD,
+																API_PWD: API_PWD,
+																GOOGLE_FONT_KEY: GOOGLE_FONT_KEY,
+																GOOGLE_ID: GOOGLE_ID,
+																GOOGLE_SECRET: GOOGLE_SECRET,
+																IS_GMAIL: MAIL_SERVICE == "gmail" ?  MAIL_SERVICE : undefined,
+																SMTP_HOST: SMTP_HOST,
+																SMTP_DOMAIN: SMTP_DOMAIN,
+																SMTP_PORT: SMTP_PORT,
+																SMTP_USERNAME: SMTP_USERNAME,
+																SMTP_PASSWORD: SMTP_PASSWORD,
+																ENABLE_YOUTUBE: ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+																youpod_version: package.version
+															  }
+															
+															  res.setHeader("content-type", "text/html");
+															  res.send(mustache.render(template, render_object, partials))
+															})
+														  })
+														})
 													  })
 													})
 												  })
 												})
-											  })
-											})
 										  })
-									})
+									  })
+								  })
 								})
-                            })
-                          })
-                        })
-                      })
-                    })
-                  })
-                })
-              })
-            });
-        })
-        })
-      })
-    })
+							  })
+							})
+						  })
+						})
+					  })
+					})
+				  });
+			  })
+			  })
+			})
+		  })
+	})
   } else {
     res.redirect("/admin/login")
   }
