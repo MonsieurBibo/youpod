@@ -408,6 +408,102 @@ app.post("/social/add", csrfProtection, (req, res) => {
   })
 })
 
+app.post("/social/custom/add", csrfProtection, (req, res) => {
+	getOption("GEN_PWD", (GEN_PWD) => { 
+		if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined && req.body.duration != undefined) {
+
+			if (GEN_PWD == "") {
+				checkIfExistSocialCustom(req, res, () => {
+					bdd.Social.create({
+						email: req.body.email,
+						rss: "__custom__",
+						access_token: randtoken.generate(32),
+						epTitle: req.body.epTitle,
+						imgLink: req.body.imgURL,
+						podTitle: req.body.podTitle,
+						audioLink: req.body.audioURL,
+						startTime: req.body.timestart,
+						duration: req.body.duration
+					}).then((video) => {
+						initNewGeneration();
+						res.sendFile(path.join(__dirname, "/web/done.html"))
+					})
+				})
+			} else {
+				if (req.session.logged != undefined) {
+					checkIfExistSocialCustom(req, res, () => {
+						bdd.Social.create({
+							email: req.body.email,
+							rss: "__custom__",
+							access_token: randtoken.generate(32),
+							epTitle: req.body.epTitle,
+							imgLink: req.body.imgURL,
+							podTitle: req.body.podTitle,
+							audioLink: req.body.audioURL,
+							startTime: req.body.timestart,
+							duration: req.body.duration
+						}).then((video) => {
+							initNewGeneration();
+							res.sendFile(path.join(__dirname, "/web/done.html"))
+						})
+					})
+				} else {
+					res.redirect("/login")
+				}
+			}
+		} else {
+			res.status(400).send("Votre requète n'est pas complète...")
+		}
+	})
+  })
+
+app.get("/social/custom", csrfProtection, (req, res) => {
+	getOption("GEN_PWD", (GEN_PWD) => { 
+	  getOption("KEEPING_TIME", (KEEPING_TIME) => {
+		if (GEN_PWD == "") {
+		  bdd.Social.count({
+			where: {
+			  [Op.or]: [{status: "waiting"}, {status: "during"}]
+			}
+		  }).then((nb) => {
+			template = fs.readFileSync(path.join(__dirname, "/web/social_custom.mustache"), "utf8")
+	  
+			var render_object = {
+			  "waiting_list": nb,
+			  "keeping_time": KEEPING_TIME,
+			  "csrfToken": req.csrfToken
+			}
+		  
+			res.setHeader("content-type", "text/html");
+			res.send(mustache.render(template, render_object, partials))
+		  })
+	  
+		} else {
+		  if (req.session.logged != undefined) {
+			bdd.Social.count({
+			  where: {
+				[Op.or]: [{status: "waiting"}, {status: "during"}]
+			  }
+			}).then((nb) => {
+			  template = fs.readFileSync(path.join(__dirname, "/web/social.mustache"), "utf8")
+		
+			  var render_object = {
+				"waiting_list": nb,
+				"keeping_time": KEEPING_TIME,
+				"csrfToken": req.csrfToken
+			  }
+			
+			  res.setHeader("content-type", "text/html");
+			  res.send(mustache.render(template, render_object, partials))
+			})
+		  } else {
+			res.redirect("/login?return=social/custom")
+		  }
+		}
+	  })
+	})
+  })
+
 app.get("/social", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => { 
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
@@ -453,7 +549,6 @@ app.get("/social", csrfProtection, (req, res) => {
       }
     })
   })
-
 })
 
 app.get("/custom", csrfProtection, (req, res) => {
@@ -858,7 +953,7 @@ function checkIfExistSocial(req, res, guid, cb) {
 }
 
 function checkIfExistSocialCustom(req, res, cb) {
-  bdd.Social.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.epImg, audioURL: req.body.audioURL, startTime: req.body.timestart, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
+  bdd.Social.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, imgLink: req.body.imgURL, audioLink: req.body.audioURL, startTime: req.body.timestart, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
     if (video == null) {
       cb();
     } else {
@@ -1093,6 +1188,8 @@ function initNewGeneration() {
             social.save().then((social) => {
 				if (social.rss != "__custom__") {
 					generateImgSocial(social.rss, social.guid, social.id);
+				} else {
+					generateImgSocialCustom(social.id)
 				}
             })
           }
@@ -1179,8 +1276,8 @@ function generateImgSocialCustom(id) {
     (async () => {
       const browser = await puppeteer.launch({
         defaultViewport: {
-          width: 1000,
-          height: 1000
+          width: 1080,
+          height: 1080
         },
         headless: true,
         args: ['--no-sandbox']
@@ -1192,7 +1289,7 @@ function generateImgSocialCustom(id) {
       await browser.close();
       console.log("Social " + id + " Image générée!")
 
-      downloadAudioSocial(id, social.audioLink, social.startTime, social.color)
+      downloadAudioSocial(id, social.audioLink)
     })();
   })
 }
@@ -1414,14 +1511,27 @@ function generateVideo(id, ep_title) {
 
 function sendMailSocial(id) {
   bdd.Social.findByPk(id).then((social) => {
-    template = fs.readFileSync(path.join(__dirname, "/web/mail_social.mustache"), "utf8")
+	  if (social.rss != "__custom__") {
+		template = fs.readFileSync(path.join(__dirname, "/web/mail_social.mustache"), "utf8")
+	  } else {
+		template = fs.readFileSync(path.join(__dirname, "/web/mail_social_custom.mustache"), "utf8")
+	  }
     
     getOption("KEEPING_TIME", (KEEPING_TIME) => {
-      renderObj = {
-        "feed_url": social.rss,
-        "keeping_time": KEEPING_TIME,
-        "video_link": process.env.HOST + "/download/social/" + id + "?token=" + social.access_token
-      }
+		if (social.rss != "__custom__") {
+			renderObj = {
+				"feed_url": social.rss,
+				"keeping_time": KEEPING_TIME,
+				"video_link": process.env.HOST + "/download/social/" + id + "?token=" + social.access_token
+			}
+		} else {
+			renderObj = {
+				"ep_title": social.epTitle,
+				"keeping_time": KEEPING_TIME,
+				"video_link": process.env.HOST + "/download/social/" + id + "?token=" + social.access_token
+			}
+		}
+
   
   
       const mailOptions = {

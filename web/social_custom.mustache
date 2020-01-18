@@ -96,7 +96,7 @@
     <!-- Custom styles for this template -->
     <link href="/static/floating-labels.css" rel="stylesheet">
   <body>
-    <form class="form-signin" action="/social/add" method="POST">
+    <form class="form-signin" action="/social/custom/add" method="POST">
       <input type="hidden" name="_csrf" value="{{csrfToken}}">
       <div class="text-center mb-4">
         <img class="mb-4" src="/static/logo.png" alt="YouPod" width="300" height="69">
@@ -119,23 +119,33 @@
         </div>
 		<div class="switch">
 <p>
-  <button class="btn btn-large btn-primary" type="button">Avec un RSS</button>
-  <a href="/social/custom"><button class="btn btn-large" type="button">Avec un MP3</button> </a>
+  <a href="/social"><button class="btn btn-large" type="button">Avec un RSS</button> </a>
+  <button class="btn btn-large btn-primary" type="button">Avec un MP3</button>
 </p>
 </div>
 		</center>
 
-      <div class="form-label-group">
-        <input type="url" name="rss" id="rss" class="form-control" placeholder="URL de votre flux" required autofocus>
-        <label for="rss">URL de votre flux</label>
-      </div>
-      <button type="button" onclick="fetchFeed()" class="btn btn-info float-right" style="margin-bottom: 1rem;">Rechercher</button>
-    <br>
-      <div class="form-group ">
-            <select id="selectEp" name="selectEp" class="form-control" disabled required>
-              <option selected value="__last__">Dernier épisode</option>
-            </select>
-      </div>
+   <div class="form-label-group">
+    <input type="text" id="imgURL" name="imgURL" class="form-control" placeholder="URL de votre image" required autofocus>
+    <label for="imgURL">URL de votre image</label>
+  </div>
+
+   <div class="form-label-group">
+    <input type="text" id="epTitle" name="epTitle" class="form-control" placeholder="Titre de votre épisode" required autofocus>
+    <label for="epTitle">Titre de votre épisode</label>
+  </div>
+
+   <div class="form-label-group">
+    <input type="text" id="podTitle" name="podTitle" class="form-control" placeholder="Titre de votre émission" required autofocus>
+    <label for="podTitle">Titre de votre émission</label>
+  </div>
+
+   <div class="form-label-group">
+    <input type="url" id="audioURL" name="audioURL" class="form-control" placeholder="URL de votre audio" required autofocus>
+    <label for="audioURL">URL de votre audio</label>
+  </div>
+
+      <button type="button" onclick="updateAudio()" class="btn btn-info float-right" style="margin-bottom: 1rem;">Rechercher</button>
 
 		<p id="infoTime">Pour définir les paramètres de temps, choisissez un épisode</p>
 		<div id="audioSelector" style="display: none;">
@@ -174,6 +184,6 @@
 </form>
 <script src="https://cdn.jsdelivr.net/npm/wnumb@1.2.0/wNumb.min.js"></script>
 <script src="/static/nouislider.min.js"></script>
-<script src="/static/social.js"></script>
+<script src="/static/social_custom.js"></script>
 </body>
 </html>

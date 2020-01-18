@@ -3,9 +3,11 @@
 ### Version 1.2.2
 #### Ajouts
 - Clé de l'API google sur l'admin
+- Lecteur pour définir le début de l'extrait à l'oreille
 
 #### Corrections
 - Changement sur le mail pour les social
+- Bug lors de la lecture de l'extrait
 
 ### Version 1.2.1
 #### Ajouts
