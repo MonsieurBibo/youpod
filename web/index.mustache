@@ -132,17 +132,6 @@
               <option selected value="__last__">Dernier épisode</option>
             </select>
       </div>
-
-      <input type="hidden" name="font-choice"  id="font-choice" value="Montserrat">
-      <div class="font-test">
-
-      <div id="font-picker"></div>
-        <p class="apply-font">
-        Portez ce vieux whisky au juge blond qui fume sur son île intérieure, à côté de l'alcôve ovoïde, où les bûches se consument dans l'âtre, ce qui lui permet de penser à la cænogénèse de l'être dont il est question dans la cause ambiguë entendue à Moÿ, dans un capharnaüm qui, pense-t-il, diminue çà et là la qualité de son œuvre.
-        </p>
-      </div>
-
-
       <div class="form-label-group">
         <input type="email" id="email" name="email" class="form-control" placeholder="Votre adresse mail" required autofocus>
         <label for="email">Votre adresse mail</label>
@@ -150,14 +139,23 @@
 
       <div class="form-check" style="margin-bottom: 1rem;">
         <input type="checkbox" class="form-check-input" id="checkTemplate" onchange="changeClick()">
-        <label class="form-check-label" for="checkTemplate">Modifier le template</label>
+        <label class="form-check-label" for="checkTemplate">Mode avancé</label>
       </div>
 
       <div class="form-group" id="templateDiv" style="display: none;">
         <label for="template">Votre template</label>
         <textarea class="form-control" id="template" name="template" rows="5"></textarea>
         <small id="templateHelp" class="form-text text-muted">Collez ici votre template Mustache pour créer l'image. Les balises qui seront remplacés sont <b>imageURL</b> (lien vers image de l'épisode), <b>epTitle</b> (titre de l'épisode), <b>podTitle</b> (titre du podcast) et <b>podSub</b> (le sous titre du podcast)</small>
+      
+	  	      <input type="hidden" name="font-choice"  id="font-choice" value="Montserrat">
+      <div class="font-test">
+
+      <div id="font-picker"></div>
+        <p class="apply-font">
+        Portez ce vieux whisky au juge blond qui fume sur son île intérieure, à côté de l'alcôve ovoïde, où les bûches se consument dans l'âtre, ce qui lui permet de penser à la cænogénèse de l'être dont il est question dans la cause ambiguë entendue à Moÿ, dans un capharnaüm qui, pense-t-il, diminue çà et là la qualité de son œuvre.
+        </p>
       </div>
+	  </div>
 
       {{#ENABLE_YOUTUBE}}
         {{#yt_logged}}

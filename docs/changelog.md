@@ -4,6 +4,9 @@
 #### Ajouts
 - Clé de l'API google sur l'admin
 - Lecteur pour définir le début de l'extrait à l'oreille
+- Social Custom
+- Option de police déplacée dans option avancée
+- Social sur le dashboard admin
 
 #### Corrections
 - Changement sur le mail pour les social
