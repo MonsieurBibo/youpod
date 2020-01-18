@@ -156,6 +156,21 @@ app.post("/admin/action", (req, res) => {
   }
 })
 
+app.post("/admin/prio/social/:id", (req, res) => {
+	if (req.session.loggin_admin != undefined) {
+	  bdd.Social.update({priority: req.body.priority}, {
+		where: {
+		  id: req.params.id
+		}
+	  }).then(() => {
+		res.redirect("/admin")
+	  })
+	} else {
+	  res.status(403)
+	}
+  
+  })
+
 app.post("/admin/prio/:id", (req, res) => {
   if (req.session.loggin_admin != undefined) {
     bdd.Video.update({priority: req.body.priority}, {
@@ -200,7 +215,7 @@ app.post("/admin/option", (req, res) => {
 app.get("/admin/queue", (req, res) => {
   if (req.session.loggin_admin != undefined) {
     bdd.Video.findAll({where: {[Op.or]: [{status: "during"}, {status: "waiting"}]}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((videos) => {
-      returnObj = {queue: [], during: []}
+      returnObj = {queue: [], during: [], queue_social: [], during_social: []}
 
       for (i = 0; i < videos.length; i++) {
         o = {
@@ -216,12 +231,30 @@ app.get("/admin/queue", (req, res) => {
         } else {
           returnObj.queue.push(o)
         }
-      }
+	  }
 
-      res.header("Access-Control-Allow-Origin", process.env.HOST);
-      res.header("Access-Control-Allow-Methods", "GET");
-      res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
-      res.status(200).json(returnObj)
+	  bdd.Social.findAll({where: {[Op.or]: [{status: "during"}, {status: "waiting"}]}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((socials) => { 
+		for (i = 0; i < socials.length; i++) {
+			o = {
+			  title: socials[i].epTitle,
+			  email: socials[i].email,
+			  rss: socials[i].rss,
+			  priority: socials[i].priority,
+			  id: socials[i].id
+			}
+	
+			if (socials[i].status == "during") {
+			  returnObj.during_social.push(o)
+			} else {
+			  returnObj.queue_social.push(o)
+			}
+		}
+
+		res.header("Access-Control-Allow-Origin", process.env.HOST);
+		res.header("Access-Control-Allow-Methods", "GET");
+		res.header("Access-Control-Allow-Headers", req.header('access-control-request-headers'));
+		res.status(200).json(returnObj)
+	  })
     })
   } else {
     res.status(403)
