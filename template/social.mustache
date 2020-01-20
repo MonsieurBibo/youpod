@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<style> 
+@import url('https://fonts.googleapis.com/css?family={{ font_url }}');
+
+body{
+	margin: 0px;  
+	font-family: '{{ font }}', sans-serif;
+	width: 100%; height: 100%;
+	background-color: black;
+}
+
+
+h1,h2,h3 {
+	width: 100%;
+	margin-top: 1vh;
+
+	margin-left: 1vw;
+	margin-right: 1vw;
+}
+
+h1 {
+	margin-bottom: 0;
+	font-size: 5vw;
+   }
+
+h2 {
+    font-size: 4vw;
+    font-weight: 400;
+    margin-bottom: 0;
+    }
+    
+h3 {
+    font-size: 3vw;
+    font-weight: 400;
+    margin-bottom: 1.5vh;
+}
+           
+
+.text{
+    word-wrap: normal;
+    color: white;
+    -webkit-filter: drop-shadow(5px 5px 5px black);
+	filter: drop-shadow(5px 5px 5px black);
+	}
+	
+.blur{
+	position: fixed;
+  	background: url({{{ imageURL }}});
+	background-position: center;
+	background-size: cover;
+  	bottom: 0; right: 0px; 
+  	width: 100%; 
+  	height: 100vh;
+  	filter: blur(20px);
+  	transform: scale(1.1);
+  	opacity: 0.5;
+}
+            
+.wrapper {    
+	position:relative; 
+	width: 100%; 
+	height:100vh;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	justify-content:space-evenly;
+}
+            
+
+
+.cover{
+	margin: 5vh;
+	flex-grow: 1;
+   	background: url({{{ imageURL }}});
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: center;
+	-webkit-filter: drop-shadow(5px 5px 5px black);
+	filter: drop-shadow(5px 5px 5px black);
+}
+
+      
+.tags {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding-top: 0;
+  padding-bottom: 5vh;
+  padding-left: 3vh;
+  padding-right: 3vh;
+	}
+
+
+
+</style>
+</head>
+<body>
+<div class="blur"></div>
+
+<div class="wrapper">
+		<div class="cover"></div>
+   		<div class="tags">
+         	<h1 class="text">{{{ epTitle }}}</h1>
+       		<h2 class="text">{{{ podTitle }}}</h2>
+    	</div>
+</div>
+
+</body>
+
+</html>

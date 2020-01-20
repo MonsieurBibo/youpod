@@ -1,45 +1,47 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const Preview = sequelize.define('Preview', {
+  const Preview = sequelize.define('Social', {
     id: {
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
       type: DataTypes.INTEGER
-    },
+	},
+	rss: {
+		type: DataTypes.STRING,
+		allowNull: false
+	},
+	guid: {
+		type: DataTypes.STRING
+	},
     email: {
       type: DataTypes.STRING,
       allowNull: false
     },
     epTitle: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
     podTitle: {
       type: DataTypes.STRING,
-      allowNull: false
     },
     imgLink: {
       type: DataTypes.STRING,
-      allowNull: false,
       validate: {
         isUrl: true
       }
     },
     audioLink: {
       type: DataTypes.STRING,
-      allowNull: false,
       validate: {
         isUrl: true
       }
     },
-    color: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
     startTime: {
       type: DataTypes.STRING
-    },
+	},
+	duration: {
+		type: DataTypes.STRING
+	},
     end_timestamp: {
       type: DataTypes.INTEGER
     },
