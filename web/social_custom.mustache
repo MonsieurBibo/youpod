@@ -143,33 +143,19 @@
     <input type="url" id="audioURL" name="audioURL" class="form-control" placeholder="URL de votre audio" required autofocus>
     <label for="audioURL">URL de votre audio</label>
   </div>
-
-      <button type="button" onclick="updateAudio()" class="btn btn-info float-right" style="margin-bottom: 1rem;">Rechercher</button>
-
-		<p id="infoTime">Pour définir les paramètres de temps, choisissez un épisode</p>
-		<div id="audioSelector" style="display: none;">
-			<p>Utilisez ce lecteur pour définir le début de votre extrait</p>
-			<audio id="audioSelect" controls src="" style="width: 100%;"></audio>
-			<center>
-	  		<button class="btn btn-large btn-primary" onclick="setStart()" id="buttonSet" type="button">Définir le début de l'extrait</button>
-			</center>
-
-			<audio id="audioPreview"></audio>
-			<div style="display: none;" class="slider" id="slider"></div>
-			<div class="slider" id="mini_slider"></div>
-
 			      <div class="form-label-group">
-        <input type="text" id="timestart" name="timestart" class="form-control" placeholder="00:00" required autofocus>
+        <input type="text" id="timestart" name="timestart" class="form-control" value="00:00:00" pattern="[0-9][0-9]:[0-9][0-9]:[0-9][0-9]" placeholder="00:00:00" required autofocus>
         <label for="timestart">Début de la vidéo</label>
+		<small>Il est possible qu'il y ai un décallage entre le moment que vous attendez et le début de l'extrait. La référence reste Audacity pour le chronométrage</small>
       </div>
 
 	<div class="form-label-group">
-        <input type="number" id="duration" name="duration" class="form-control" placeholder="0" min="0" max="119" required autofocus>
-        <label for="duration">Durée (En secondes, maximum 119s)</label>
+        <input type="number" id="duration" name="duration" class="form-control" value="10" placeholder="10" min="10" max="119" required autofocus>
+        <label for="duration">Durée (En secondes, minimum 10s, maximum 119s)</label>
       </div>
 
 		<center>
-	  <button class="btn btn-large btn-primary" onclick="playSound()" id="buttonPlay" type="button">Ecouter l'extrait</button>
+	  <button style="display: none;" class="btn btn-large btn-primary" onclick="playSound()" id="buttonPlay" type="button">Ecouter l'extrait</button>
 	  </center> <br>
 		</div>
 
@@ -181,8 +167,5 @@
       <button class="btn btn-lg btn-primary btn-block" type="submit">Lancer la génération</button>
     {{> footer}}
 </form>
-<script src="https://cdn.jsdelivr.net/npm/wnumb@1.2.0/wNumb.min.js"></script>
-<script src="/static/nouislider.min.js"></script>
-<script src="/static/social_custom.js"></script>
 </body>
 </html>

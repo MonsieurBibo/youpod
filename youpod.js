@@ -390,7 +390,7 @@ app.post("/social/add", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => { 
 	checkIfRss(req.body.rss, (isRss) => {
 		if(isRss) {
-			if (req.body.email != undefined && req.body.timestart != undefined && req.body.duration != undefined) {
+			if (req.body.email != undefined && req.body.timestart != undefined && req.body.timestart.math(/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/).length != 1 && req.body.duration != undefined) {
 				if (GEN_PWD == "") {
 					getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
 						checkIfExistSocial(req, res, guid, () => {
@@ -448,7 +448,7 @@ app.post("/social/add", csrfProtection, (req, res) => {
 
 app.post("/social/custom/add", csrfProtection, (req, res) => {
 	getOption("GEN_PWD", (GEN_PWD) => { 
-		if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined && req.body.duration != undefined) {
+		if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined && req.body.timestart.math(/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/).length != 1 && req.body.duration != undefined) {
 
 			if (GEN_PWD == "") {
 				checkIfExistSocialCustom(req, res, () => {
@@ -1477,7 +1477,7 @@ function generateVideoSocial(id) {
 
 	s = splited[0] * 3600 + splited[1] * 60 + parseInt(splited[2])
 
-	var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/social_${id}.png`, "-filter_complex", 'overlay', "-vcodec", "libvpx-vp9", "-stream_loop", -1, "-i", `./assets/bars.webm`, "-ss", s + 1, "-i", `./tmp/social_${id}.mp3`, "-t", social.duration, "-map", "2:a", "-acodec", "aac", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
+	var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/social_${id}.png`, "-filter_complex", 'overlay', "-vcodec", "libvpx-vp9", "-stream_loop", -1, "-i", `./assets/bars.webm`, "-ss", s, "-i", `./tmp/social_${id}.mp3`, "-t", social.duration, "-map", "2:a", "-acodec", "aac", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
   
 	child.stdout.on('data', function (data) {
 	  console.log("Social " +id + ' stdout: ' + data);

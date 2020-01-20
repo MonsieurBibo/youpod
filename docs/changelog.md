@@ -5,6 +5,7 @@
 - Bug dans la recherche dans le flux quand l'épisode ne contenait pas d'enclosure
 - Corrections fautes dans le mail
 - Correction temps démarage extrait
+- Suppression slider à cause de problèmes
 
 ### Version 1.2.2
 #### Ajouts
