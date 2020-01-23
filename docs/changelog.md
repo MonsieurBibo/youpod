@@ -1,5 +1,10 @@
 # Changelog
 ## Version 1.2
+### Version 1.2.4
+#### Ajouts
+- Modification du footer des pages web
+- 
+
 ### Version 1.2.3
 #### Corrections
 - Bug dans la recherche dans le flux quand l'épisode ne contenait pas d'enclosure
