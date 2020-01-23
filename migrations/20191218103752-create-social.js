@@ -1,12 +1,19 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Previews', {
+    return queryInterface.createTable('Socials', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
+	  },
+	  rss: {
+        type: Sequelize.STRING,
+        allowNull: false
+	  },
+	  guid: {
+        type: Sequelize.STRING,
       },
       email: {
         type: Sequelize.STRING,
@@ -14,31 +21,26 @@ module.exports = {
       },
       epTitle: {
         type: Sequelize.STRING,
-        allowNull: false,
       },
       podTitle: {
         type: Sequelize.STRING,
-        allowNull: false
       },
       imgLink: {
         type: Sequelize.STRING,
-        allowNull: false,
         validate: {
           isUrl: true
         }
       },
       audioLink: {
         type: Sequelize.STRING,
-        allowNull: false,
         validate: {
           isUrl: true
         }
       },
-      color: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
       startTime: {
+        type: Sequelize.STRING
+	  },
+	  duration: {
         type: Sequelize.STRING
       },
       end_timestamp: {

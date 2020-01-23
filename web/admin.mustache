@@ -104,6 +104,11 @@
      <b>{{ nb_gen_video }}</b><br>
       <small>vidéos générées</small>
     </div>
+	<div class="col iconsadmin">
+      <img src="./static/generated.png" alt="generated" width="40" height="40"><br>
+     <b>{{ nb_gen_social }}</b><br>
+      <small>extraits générées</small>
+    </div>
     <div class="col iconsadmin">
       <img src="./static/downloaded.png" alt="downloaded" width="40" height="40"><br>
      <b>{{ nb_save_video }}</b> Vidéos<br>
@@ -138,7 +143,7 @@
 
   </div>
   <br><br>
-  <h3>En cours</h3>
+  <h3>En cours (Vidéo)</h3>
     <table id="during" class="table table-sm table-hover table-borderless">
         <thead class="thead-dark">
             <tr>
@@ -148,8 +153,30 @@
             </tr>
         </thead>
     </table>
-    <h3>En attente</h3>
-  <table id="queue" class="table table-sm table-hover table-borderless">
+    <h3>En attente (Vidéo)</h3>
+  	<table id="queue" class="table table-sm table-hover table-borderless">
+        <thead class="thead-dark">
+            <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Titre/RSS</th>
+            <th scope="col">Mail</th>
+            <th scope="col">Priorité</th>
+            </tr>
+        </thead>
+    </table>
+
+	<h3>En cours (Extraits)</h3>
+    <table id="during_social" class="table table-sm table-hover table-borderless">
+        <thead class="thead-dark">
+            <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Titre/RSS</th>
+            <th scope="col">Mail</th>
+            </tr>
+        </thead>
+    </table>
+    <h3>En attente (Social)</h3>
+  	<table id="queue_social" class="table table-sm table-hover table-borderless">
         <thead class="thead-dark">
             <tr>
             <th scope="col">ID</th>
@@ -176,8 +203,8 @@
     </div>
 
     <div class="form-label-group" data-children-count="1">
-        <input type="number" name="MAX_DURING_PREVIEW" id="MAX_DURING_PREVIEW" class="form-control" value="{{ MAX_DURING_PREVIEW }}" placeholder="Nombre de traitements simultanés" required="" autofocus="">
-        <label for="MAX_DURING_PREVIEW">Nombre de traitements simultanés pour les previews</label>
+        <input type="number" name="MAX_DURING_SOCIAL" id="MAX_DURING_SOCIAL" class="form-control" value="{{ MAX_DURING_SOCIAL }}" placeholder="Nombre de traitements simultanés" required="" autofocus="">
+        <label for="MAX_DURING_SOCIAL">Nombre de traitements simultanés pour les extraits</label>
     </div>
 
     <div class="form-label-group" data-children-count="1">
@@ -260,9 +287,19 @@
     </div>
 
     <div class="form-label-group" data-children-count="1">
-        <input type="text" name="GOOGLE_FONT_KEY" id="GOOGLE_FONT_KEY" value="{{ GOOGLE_FONT_KEY }}"class="form-control" placeholder="Mot de passe de l'API" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
+        <input type="text" name="GOOGLE_FONT_KEY" id="GOOGLE_FONT_KEY" value="{{ GOOGLE_FONT_KEY }}"class="form-control" placeholder="Mot de passe de l'API Google Font" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
         <label for="GOOGLE_FONT_KEY">Mot de passe de l'API Google Font</label>
         <small class="form-text text-muted"><a href="https://developers.google.com/fonts/docs/developer_api#APIKey">Récupérer votre clé</a></small>
+    </div>
+
+	<div class="form-label-group" data-children-count="1">
+        <input type="text" name="GOOGLE_ID" id="GOOGLE_ID" value="{{ GOOGLE_ID }}"class="form-control" placeholder="ID Client Google" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
+        <label for="GOOGLE_ID">ID Client Google</label>
+    </div>
+
+	<div class="form-label-group" data-children-count="1">
+        <input type="text" name="GOOGLE_SECRET" id="GOOGLE_SECRET" value="{{ GOOGLE_SECRET }}"class="form-control" placeholder="Code secret du client Google" required="" autofocus="" data-kwimpalastatus="alive" data-kwimpalaid="1576839795350-4">
+        <label for="GOOGLE_SECRET">Code secret du client Google</label>
     </div>
 
     <button class="btn btn-lg btn-primary btn-block" onclick="submitForm()">Sauvegarder</button>

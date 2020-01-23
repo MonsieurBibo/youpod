@@ -7,7 +7,6 @@
     <title>YouPod</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/4.4/examples/floating-labels/">
-
         <!--Favicon -->
         <link rel="apple-touch-icon" sizes="57x57" href="/static/apple-icon-57x57.png">
         <link rel="apple-touch-icon" sizes="60x60" href="/static/apple-icon-60x60.png">
@@ -29,9 +28,8 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-
+	<link rel="stylesheet" href="/static/nouislider.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-  <script src="./static/index.js"></script>
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
@@ -45,7 +43,6 @@
        align-items: center;
        margin-bottom: 1rem;
         }
-
       .bd-placeholder-img {
         font-size: 1.125rem;
         text-anchor: middle;
@@ -74,50 +71,59 @@
     box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.1) inset;
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
-   }
+     }
 
-   .apply-font{
-     padding: 0.5rem;
-     margin-block-end: 0;
-   }
+     .font-picker{
+       width: 500px;
+     }
+
+
+     .apply-font{
+       padding: 0.5rem;
+       margin-block-end: 0;
+     }
+
+	 .slider {
+		 margin-top: 50px;
+		 margin-bottom: 50px;
+	 }
+
+	 .noUi-handle-upper > .noUi-tooltip {
+		bottom: -150%;
+	 }
     
     </style>
     <!-- Custom styles for this template -->
     <link href="/static/floating-labels.css" rel="stylesheet">
   <body>
-    <form class="form-signin" action="/addvideocustom" method="POST">
+    <form class="form-signin" action="/social/custom/add" method="POST">
       <input type="hidden" name="_csrf" value="{{csrfToken}}">
+      <div class="text-center mb-4">
+        <img class="mb-4" src="/static/logo.png" alt="YouPod" width="300" height="69">
+      </div>
+        <div class="activity lead">
+          {{ waiting_list }} traitement(s) avant vous
+      </div>    
+      <div class="info">
+        <small>Une fois la vidéo générée, vous receverez un email contenant le lien pour la télécharger. Vous aurez alors <strong>{{ keeping_time }}H</strong> pour la télécharger.</small>
+      </div>
 
-  <div class="text-center mb-4">
-    <img class="mb-4" src="/static/logo.png" alt="YouPod" width="300" height="69">
-  </div>
-    <div class="activity lead">
-      {{ waiting_list }} traitement(s) avant vous
-    </div>  
-  <div class="info">
-    <small>Une fois la vidéo générée, vous receverez un email contenant le lien pour la télécharger. Vous aurez alors <strong>{{ keeping_time }}H</strong> pour la télécharger.</small>
-  </div>
+	  <center>
 
-	<center>
         <div class="switch">
         <p>
-          <button class="btn btn-large btn-primary" type="button">Générer une vidéo</button>
-          <a href="/social"><button class="btn btn-large" type="button">Générer un aperçu</button> </a>
+          <a href="/"><button class="btn btn-large" type="button">Générer une vidéo</button> </a>
+          <button class="btn btn-large btn-primary" type="button">Générer un aperçu</button>
         </p>
         </div>
-<div class="switch">
+		<div class="switch">
 <p>
-  <a href="/"><button class="btn btn-large" type="button">Avec un RSS</button> </a>
+  <a href="/social"><button class="btn btn-large" type="button">Avec un RSS</button> </a>
   <button class="btn btn-large btn-primary" type="button">Avec un MP3</button>
 </p>
 </div>
-</center>
-    {{#ENABLE_YOUTUBE}}
-      {{^yt_logged}}
-        <a href="/yt/login" class="btn btn-lg btn-block btn-primary">Se connecter à Youtube</a>
-      {{/yt_logged}}<br>
-    {{/ENABLE_YOUTUBE}}
- 
+		</center>
+
    <div class="form-label-group">
     <input type="text" id="imgURL" name="imgURL" class="form-control" placeholder="URL de votre image" required autofocus>
     <label for="imgURL">URL de votre image</label>
@@ -133,63 +139,33 @@
     <label for="podTitle">Titre de votre émission</label>
   </div>
 
-    <div class="form-label-group">
-    <input type="text" id="podSub" name="podSub" class="form-control" placeholder="Slogan de votre émission" required autofocus>
-    <label for="podSub">Slogan de votre émission</label>
-  </div>
-
- <div class="form-label-group">
+   <div class="form-label-group">
     <input type="url" id="audioURL" name="audioURL" class="form-control" placeholder="URL de votre audio" required autofocus>
     <label for="audioURL">URL de votre audio</label>
   </div>
-  
-   <div class="form-label-group">
-    <input type="email" id="email" name="email" class="form-control" placeholder="Votre adresse mail" required autofocus>
-    <label for="email">Votre adresse mail</label>
-  </div>
-
-  {{#ENABLE_YOUTUBE}}
-    {{#yt_logged}}
-      <div class="form-check" style="margin-bottom: 1rem;">
-        <input type="checkbox" class="form-check-input" name="publishYT" id="publishYT">
-        <label class="form-check-label" for="publishYT">Mettre en ligne sur Youtube</label>
-      </div>
-    {{/yt_logged}}
-  {{/ENABLE_YOUTUBE}}
-
-      <div class="form-check" style="margin-bottom: 1rem;">
-        <input type="checkbox" class="form-check-input" id="checkTemplate" onchange="changeClick()">
-        <label class="form-check-label" for="checkTemplate">Mode avancé</label>
+			      <div class="form-label-group">
+        <input type="text" id="timestart" name="timestart" class="form-control" value="00:00:00" pattern="[0-9][0-9]:[0-9][0-9]:[0-9][0-9]" placeholder="00:00:00" required autofocus>
+        <label for="timestart">Début de la vidéo</label>
+		<small>Il est possible qu'il y ai un décallage entre le moment que vous attendez et le début de l'extrait. La référence reste Audacity pour le chronométrage</small>
       </div>
 
-      <div class="form-group" id="templateDiv" style="display: none;">
-        <label for="template">Votre template</label>
-        <textarea class="form-control" id="template" name="template" rows="5"></textarea>
-        <small id="templateHelp" class="form-text text-muted">Collez ici votre template Mustache pour créer l'image. Les balises qui seront remplacés sont <b>imageURL</b> (lien vers image de l'épisode), <b>epTitle</b> (titre de l'épisode), <b>podTitle</b> (titre du podcast) et <b>podSub</b> (le sous titre du podcast)</small>
-      
-	  	  <input type="hidden" name="font-choice"  id="font-choice" value="Montserrat">
-<div class="font-test">
+	<div class="form-label-group">
+        <input type="number" id="duration" name="duration" class="form-control" value="10" placeholder="10" min="10" max="119" required autofocus>
+        <label for="duration">Durée (En secondes, minimum 10s, maximum 119s)</label>
+      </div>
 
-<div id="font-picker"></div>
-  <p class="apply-font">
-  Portez ce vieux whisky au juge blond qui fume sur son île intérieure, à côté de l'alcôve ovoïde, où les bûches se consument dans l'âtre, ce qui lui permet de penser à la cænogénèse de l'être dont il est question dans la cause ambiguë entendue à Moÿ, dans un capharnaüm qui, pense-t-il, diminue çà et là la qualité de son œuvre.</p>
-</div>
+		<center>
+	  <button style="display: none;" class="btn btn-large btn-primary" onclick="playSound()" id="buttonPlay" type="button">Ecouter l'extrait</button>
+	  </center> <br>
+		</div>
 
-	  </div>
-  <button class="btn btn-lg btn-primary btn-block" type="submit">Lancer la conversion</button>
-  {{> footer}}
+      <div class="form-label-group">
+        <input type="email" id="email" name="email" class="form-control" placeholder="Votre adresse mail" required autofocus>
+        <label for="email">Votre adresse mail</label>
+      </div>
 
+      <button class="btn btn-lg btn-primary btn-block" type="submit">Lancer la génération</button>
+    {{> footer}}
 </form>
-<script src="./static/FontPicker.js"></script>
-
-<script>
-  var font_choice = document.getElementById("font-choice");
-  var fontPicker = new FontPicker(
-    "{{ GOOGLE_FONT_KEY }}", // Google API key
-    font_choice.value, // Default font
-    { limit: 100 }, // Additional options
-  );
-  fontPicker.setOnChange(function (font) {font_choice.value = font.family; });
-</script>
 </body>
 </html>

@@ -25,6 +25,6 @@ function fetchFeed() {
                 sel.appendChild(o)
             })
             sel.removeAttribute("disabled")
-            sel.removeChild(sel.querySelector("option"))
+			sel.removeChild(sel.querySelector("option"))
         })
 }

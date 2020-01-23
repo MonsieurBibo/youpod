@@ -10,15 +10,13 @@ PORT=5674
 HOST=http://localhost:5674
 EXPORT_FOLDER=./video
 ADMIN_PWD=123456
-COOKIE_SECRET=IDK
-GOOGLE_ID=
-GOOGLE_SECRET=`)
+COOKIE_SECRET=IDK`)
 }
 
 db.sequelize.sync().then(()=> {
     console.log("Création des tables réussies!")
     db.Option.findOrCreate({where: {key: 'MAX_DURING'}, defaults: {value: '1'}}).then(() => {
-        db.Option.findOrCreate({where: {key: 'MAX_DURING_PREVIEW'}, defaults: {value: '1'}}).then(() => {
+        db.Option.findOrCreate({where: {key: 'MAX_DURING_SOCIAL'}, defaults: {value: '1'}}).then(() => {
             db.Option.findOrCreate({where: {key: 'KEEPING_TIME'}, defaults: {value: '12'}}).then(() => {
                 db.Option.findOrCreate({where: {key: 'MAIL_SERVICE'}, defaults: {value: 'gmail'}}).then(() => {
                     db.Option.findOrCreate({where: {key: 'SMTP_HOST'}, defaults: {value: 'send.example.com'}}).then(() => {
@@ -30,8 +28,12 @@ db.sequelize.sync().then(()=> {
                                             db.Option.findOrCreate({where: {key: 'GMAIL_PWD'}, defaults: {value: '123456'}}).then(() => {
                                                 db.Option.findOrCreate({where: {key: 'GEN_PWD'}, defaults: {value: ''}}).then(() => {
                                                     db.Option.findOrCreate({where: {key: 'API_PWD'}, defaults: {value: '123456'}}).then(() => {
-                                                        db.Option.findOrCreate({where: {key: 'GOOGLE_FONT_KEY'}, defaults: {value: ''}}).then(() => {
-                                                            db.Option.findOrCreate({where: {key: 'ENABLE_YOUTUBE'}, defaults: {value: 'true'}})
+                                                        db.Option.findOrCreate({where: {key: 'GOOGLE_FONT_KEY'}, defaults: {value: '123456'}}).then(() => {
+															db.Option.findOrCreate({where: {key: 'GOOGLE_ID'}, defaults: {value: '123456'}}).then(() => {
+																db.Option.findOrCreate({where: {key: 'GOOGLE_SECRET'}, defaults: {value: '123456'}}).then(() => {
+																	db.Option.findOrCreate({where: {key: 'ENABLE_YOUTUBE'}, defaults: {value: 'false'}})
+																})
+															})
                                                         })
                                                     })
                                                 })
