@@ -7,6 +7,9 @@
 - Vérification du MP3 pour les créations à partir de flux
 - Changement de l'encodage
 
+#### Corrections
+- Correction bug d'affichage de l'image
+
 ### Version 1.2.3
 #### Corrections
 - Bug dans la recherche dans le flux quand l'épisode ne contenait pas d'enclosure

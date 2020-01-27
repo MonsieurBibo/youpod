@@ -1448,7 +1448,7 @@ function generateFeed(feed_url, guid, temp, id, font) {
     }
 
     if(feed.items[i].itunes.image == undefined) {
-      img = feed.image.link
+      img = feed.itunes.image ? feed.itunes.image : feed.image.url
     } else {
       img = feed.items[i].itunes.image
     }
