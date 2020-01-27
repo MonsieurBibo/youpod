@@ -449,7 +449,7 @@ app.post("/social/add", csrfProtection, (req, res) => {
 app.post("/social/custom/add", csrfProtection, (req, res) => {
 	getOption("GEN_PWD", (GEN_PWD) => { 
 		if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined && req.body.timestart.match(/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/).length == 1 && req.body.duration != undefined) {
-      checkIfMP3(req.body.audioURL, res, () => {
+      checkIfMP3(req.body.audioURL, sendErrorPage(res), () => {
         if (GEN_PWD == "") {
           checkIfExistSocialCustom(req, res, () => {
             bdd.Social.create({
@@ -898,7 +898,7 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => { 
     if (GEN_PWD == "") {
       if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
-        checkIfMP3(req.body.audioURL, res, ()=> {
+        checkIfMP3(req.body.audioURL, sendErrorPage(res), ()=> {
           checkIfExistCustom(req, res, () => {
             console.log(req.body.imgURL)
             bdd.Video.create({
@@ -928,7 +928,7 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
     } else {
       if (req.session.logged != undefined) {
         if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {  
-          checkIfMP3(req.body.audioURL, res, ()=> { 
+          checkIfMP3(req.body.audioURL, sendErrorPage(res), ()=> { 
             checkIfExistCustom(req, res, () => {
               bdd.Video.create({
                 email: req.body.email,
@@ -961,7 +961,18 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
   })
 })
 
-function checkIfMP3(url, res, cb) {
+function sendErrorPage(res) {
+  template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
+
+  var render_object = {
+    "err_message": "L'audio que vous avez entré n'est pas un MP3"
+  }
+
+  res.setHeader("content-type", "text/html");
+  res.send(mustache.render(template, render_object))
+}
+
+function checkIfMP3(url, redirectError, cb) {
   fetch(url)
   .then((data) => {
     contentType = data.headers.get("content-type")
@@ -969,27 +980,11 @@ function checkIfMP3(url, res, cb) {
     if (contentType && contentType == "audio/mpeg") {
       cb()
     } else {
-      template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-
-      var render_object = {
-        "err_message": "L'audio que vous avez entré n'est pas un MP3"
-      }
-    
-      res.setHeader("content-type", "text/html");
-      res.send(mustache.render(template, render_object))
+      redirectError()
     }
   })
   .catch(err => {
-    template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-
-    var render_object = {
-      "err_message": "L'audio que vous avez entré n'est pas un MP3"
-    }
-
-    res.setHeader("content-type", "text/html");
-    res.send(mustache.render(template, render_object))
   })
-
 }
 
 function checkIfExistCustom(req, res, cb) {
@@ -1478,13 +1473,43 @@ function generateFeed(feed_url, guid, temp, id, font) {
   })
 }
 
+function sendErrorMail(audio_url, content) {
+  template = fs.readFileSync(path.join(__dirname, "/web/mail_error.mustache"), "utf8")
+
+  renderObj = {
+    file_url : audio_url,
+    host_url: process.env.HOST
+  }
+
+  const mailOptions = {
+    from: 'YouPod@youpod.io', // sender address
+    to: content.email, // list of receivers
+    subject: `Erreur lors de la génération!`, // Subject line
+    html: mustache.render(template, renderObj)
+  };
+
+  getTransporter((transporter) => {
+    transporter.sendMail(mailOptions, function (err, info) {
+      if(err) return console.log(err)
+    });
+
+    content.status = "error"
+    content.email = "deleted"
+    content.save();
+  }) 
+}
+
 function downloadAudioSocial(id, audio_url) {
   console.log("Social " + id + " Démarage du téléchargement")
-  download(audio_url).then(data => {
-    fs.writeFileSync(path.join(__dirname, `/tmp/social_${id}.mp3`), data);
-    console.log("Social " + id + " Fichier téléchargé!");
-    generateVideoSocial(id);
-  });
+  bdd.Social.findByPk(id).then(social => {
+    checkIfMP3(audio_url, sendErrorMail(audio_url, social), () => {
+      download(audio_url).then(data => {
+        fs.writeFileSync(path.join(__dirname, `/tmp/social_${id}.mp3`), data);
+        console.log("Social " + id + " Fichier téléchargé!");
+        generateVideoSocial(id);
+      });
+    })
+  })
 }
 
 function downloadAudioCustom(id, audio_url, ep_title) {
@@ -1498,11 +1523,15 @@ function downloadAudioCustom(id, audio_url, ep_title) {
 
 function downloadAudio(id, audio_url, ep_title) {
   console.log(id + " Démarage du téléchargement")
-  download(audio_url).then(data => {
-    fs.writeFileSync(path.join(__dirname, `/tmp/audio_${id}.mp3`), data);
-    console.log(id + " Fichier téléchargé!");
-    generateVideo(id, ep_title);
-  });
+  bdd.Video.findByPk(id).then(video => {
+    checkIfMP3(audio_url, sendErrorMail(audio_url, video), () => {
+      download(audio_url).then(data => {
+        fs.writeFileSync(path.join(__dirname, `/tmp/audio_${id}.mp3`), data);
+        console.log(id + " Fichier téléchargé!");
+        generateVideo(id, ep_title);
+      });
+    })  
+  })
 }
 
 function generateVideoSocial(id) {
