@@ -5,6 +5,7 @@
 - Modification du footer des pages web
 - Vérification du MP3 pour les créations custom
 - Vérification du MP3 pour les créations à partir de flux
+- Changement de l'encodage
 
 ### Version 1.2.3
 #### Corrections
