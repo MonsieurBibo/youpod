@@ -5,7 +5,7 @@
 - Modification du footer des pages web
 - Vérification du MP3 pour les créations custom
 - Vérification du MP3 pour les créations à partir de flux
-- Changement de l'encodage
+- Changement de l'encodage (192kbps)
 
 #### Corrections
 - Correction bug d'affichage de l'image
