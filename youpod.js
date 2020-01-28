@@ -16,6 +16,7 @@ const bdd = require(__dirname + "/models/index.js")
 const getSize = require('get-folder-size');
 const Op = bdd.Sequelize.Op;
 const package = require("./package.json")
+const fetch = require('node-fetch');
 
 require('dotenv').config()
 
@@ -388,107 +389,107 @@ app.post("/authenticate", csrfProtection, (req, res) => {
 
 app.post("/social/add", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => { 
-	checkIfRss(req.body.rss, (isRss) => {
-		if(isRss) {
-			if (req.body.email != undefined && req.body.timestart != undefined && req.body.timestart.match(/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/).length == 1 && req.body.duration != undefined) {
-				if (GEN_PWD == "") {
-					getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
-						checkIfExistSocial(req, res, guid, () => {
-							bdd.Social.create({
-								rss: req.body.rss,
-								email: req.body.email,
-								access_token: randtoken.generate(32),
-								startTime: req.body.timestart,
-								duration: req.body.duration,
-								guid: guid
-							}).then((social) => {
-								initNewGeneration();
-								res.sendFile(path.join(__dirname, "/web/done.html"))
-							})
-						})
-					})
-				} else {
-					if (req.session.logged != undefined) {
-						getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
-							checkIfExistSocial(req, res, guid, () => {
-								bdd.Social.create({
-									rss: req.body.rss,
-									email: req.body.email,
-									access_token: randtoken.generate(32),
-									startTime: req.body.timestart,
-									duration: req.body.duration,
-									guid: guid
-								}).then((social) => {
-									initNewGeneration();
-									res.sendFile(path.join(__dirname, "/web/done.html"))
-								})
-							})
-						})
-					} else {
-						res.redirect("/login")
-					}
-				}
-			} else {
-				res.status(400).send("Votre requète n'est pas complète...")
-			}
-
-		} else {
-			template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-		
-			var render_object = {
-			"err_message": "L'URL que vous avez entré " + req.body.rss + " n'est pas un flux RSS valide!"
-			}
-		
-			res.setHeader("content-type", "text/html");
-			res.send(mustache.render(template, render_object))
-		}
-	}) 
+    if (req.body.email != undefined && req.body.timestart != undefined && req.body.timestart.match(/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/).length == 1 && req.body.duration != undefined) {
+      checkIfRss(req.body.rss, (isRss) => {
+        if(isRss) {
+            if (GEN_PWD == "") {
+              getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
+                checkIfExistSocial(req, res, guid, () => {
+                  bdd.Social.create({
+                    rss: req.body.rss,
+                    email: req.body.email,
+                    access_token: randtoken.generate(32),
+                    startTime: req.body.timestart,
+                    duration: req.body.duration,
+                    guid: guid
+                  }).then((social) => {
+                    initNewGeneration();
+                    res.sendFile(path.join(__dirname, "/web/done.html"))
+                  })
+                })
+              })
+            } else {
+              if (req.session.logged != undefined) {
+                getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
+                  checkIfExistSocial(req, res, guid, () => {
+                    bdd.Social.create({
+                      rss: req.body.rss,
+                      email: req.body.email,
+                      access_token: randtoken.generate(32),
+                      startTime: req.body.timestart,
+                      duration: req.body.duration,
+                      guid: guid
+                    }).then((social) => {
+                      initNewGeneration();
+                      res.sendFile(path.join(__dirname, "/web/done.html"))
+                    })
+                  })
+                })
+              } else {
+                res.redirect("/login")
+              }
+            }
+        } else {
+          template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
+        
+          var render_object = {
+          "err_message": "L'URL que vous avez entré " + req.body.rss + " n'est pas un flux RSS valide!"
+          }
+        
+          res.setHeader("content-type", "text/html");
+          res.send(mustache.render(template, render_object))
+        }
+      }) 
+    } else {
+      res.status(400).send("Votre requète n'est pas complète...")
+    }
   })
 })
 
 app.post("/social/custom/add", csrfProtection, (req, res) => {
 	getOption("GEN_PWD", (GEN_PWD) => { 
 		if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined && req.body.timestart.match(/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/).length == 1 && req.body.duration != undefined) {
-
-			if (GEN_PWD == "") {
-				checkIfExistSocialCustom(req, res, () => {
-					bdd.Social.create({
-						email: req.body.email,
-						rss: "__custom__",
-						access_token: randtoken.generate(32),
-						epTitle: req.body.epTitle,
-						imgLink: req.body.imgURL,
-						podTitle: req.body.podTitle,
-						audioLink: req.body.audioURL,
-						startTime: req.body.timestart,
-						duration: req.body.duration
-					}).then((video) => {
-						initNewGeneration();
-						res.sendFile(path.join(__dirname, "/web/done.html"))
-					})
-				})
-			} else {
-				if (req.session.logged != undefined) {
-					checkIfExistSocialCustom(req, res, () => {
-						bdd.Social.create({
-							email: req.body.email,
-							rss: "__custom__",
-							access_token: randtoken.generate(32),
-							epTitle: req.body.epTitle,
-							imgLink: req.body.imgURL,
-							podTitle: req.body.podTitle,
-							audioLink: req.body.audioURL,
-							startTime: req.body.timestart,
-							duration: req.body.duration
-						}).then((video) => {
-							initNewGeneration();
-							res.sendFile(path.join(__dirname, "/web/done.html"))
-						})
-					})
-				} else {
-					res.redirect("/login")
-				}
-			}
+      checkIfMP3(req.body.audioURL, sendErrorPage, { request: res }, () => {
+        if (GEN_PWD == "") {
+          checkIfExistSocialCustom(req, res, () => {
+            bdd.Social.create({
+              email: req.body.email,
+              rss: "__custom__",
+              access_token: randtoken.generate(32),
+              epTitle: req.body.epTitle,
+              imgLink: req.body.imgURL,
+              podTitle: req.body.podTitle,
+              audioLink: req.body.audioURL,
+              startTime: req.body.timestart,
+              duration: req.body.duration
+            }).then((video) => {
+              initNewGeneration();
+              res.sendFile(path.join(__dirname, "/web/done.html"))
+            })
+          })
+        } else {
+          if (req.session.logged != undefined) {
+            checkIfExistSocialCustom(req, res, () => {
+              bdd.Social.create({
+                email: req.body.email,
+                rss: "__custom__",
+                access_token: randtoken.generate(32),
+                epTitle: req.body.epTitle,
+                imgLink: req.body.imgURL,
+                podTitle: req.body.podTitle,
+                audioLink: req.body.audioURL,
+                startTime: req.body.timestart,
+                duration: req.body.duration
+              }).then((video) => {
+                initNewGeneration();
+                res.sendFile(path.join(__dirname, "/web/done.html"))
+              })
+            })
+          } else {
+            res.redirect("/login")
+          }
+        }
+      })
 		} else {
 			res.status(400).send("Votre requète n'est pas complète...")
 		}
@@ -897,35 +898,9 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
   getOption("GEN_PWD", (GEN_PWD) => { 
     if (GEN_PWD == "") {
       if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
-        checkIfExistCustom(req, res, () => {
-          console.log(req.body.imgURL)
-          bdd.Video.create({
-            email: req.body.email,
-            rss: "__custom__",
-            template: req.body.template,
-            access_token: randtoken.generate(32),
-            epTitle: req.body.epTitle,
-            epImg: req.body.imgURL,
-            podTitle: req.body.podTitle,
-            podSub: req.body.podSub,
-            audioURL: req.body.audioURL,
-            font: req.body["font-choice"],
-            googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
-          }).then((video) => {
-            req.session.google_code = undefined
-            req.session.save((err) => {
-              initNewGeneration();
-              res.sendFile(path.join(__dirname, "/web/done.html"))
-            })
-          })
-        })
-      } else {
-        res.status(400).send("Votre requète n'est pas complète...")
-      }
-    } else {
-      if (req.session.logged != undefined) {
-        if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {  
+        checkIfMP3(req.body.audioURL, sendErrorPage, { request: res}, ()=> {
           checkIfExistCustom(req, res, () => {
+            console.log(req.body.imgURL)
             bdd.Video.create({
               email: req.body.email,
               rss: "__custom__",
@@ -946,6 +921,36 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
               })
             })
           })
+        })
+      } else {
+        res.status(400).send("Votre requète n'est pas complète...")
+      }
+    } else {
+      if (req.session.logged != undefined) {
+        if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {  
+          checkIfMP3(req.body.audioURL, sendErrorPage, {request: res}, ()=> { 
+            checkIfExistCustom(req, res, () => {
+              bdd.Video.create({
+                email: req.body.email,
+                rss: "__custom__",
+                template: req.body.template,
+                access_token: randtoken.generate(32),
+                epTitle: req.body.epTitle,
+                epImg: req.body.imgURL,
+                podTitle: req.body.podTitle,
+                podSub: req.body.podSub,
+                audioURL: req.body.audioURL,
+                font: req.body["font-choice"],
+                googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
+              }).then((video) => {
+                req.session.google_code = undefined
+                req.session.save((err) => {
+                  initNewGeneration();
+                  res.sendFile(path.join(__dirname, "/web/done.html"))
+                })
+              })
+            })
+          })
         } else {
           res.status(400).send("Votre requète n'est pas complète...")
         }
@@ -955,6 +960,45 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
     }
   })
 })
+
+function sendErrorPage(o) {
+  template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
+
+  var render_object = {
+    "err_message": "L'audio que vous avez entré n'est pas un MP3"
+  }
+
+  o.request.setHeader("content-type", "text/html");
+  o.request.send(mustache.render(template, render_object))
+}
+
+function checkIfMP3(url, redirectError, param, cb) {
+  getFinalURL(url, (true_url) => {
+    fetch(true_url)
+    .then((data) => {
+      contentType = data.headers.get("content-type")
+  
+      if (contentType && contentType == "audio/mpeg") {
+        cb()
+      } else {
+        redirectError(param)
+      }
+    })
+    .catch(err => {
+    })
+  })
+}
+
+function getFinalURL(url, cb) {
+  fetch(url)
+  .then((data) => {
+    if (data.redirected) {
+      getFinalURL(data.url, cb)
+    } else {
+      cb(data.url)
+    }
+  })
+}
 
 function checkIfExistCustom(req, res, cb) {
   bdd.Video.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.imgURL, audioURL: req.body.audioURL, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
@@ -1404,7 +1448,7 @@ function generateFeed(feed_url, guid, temp, id, font) {
     }
 
     if(feed.items[i].itunes.image == undefined) {
-      img = feed.image.link
+      img = feed.itunes.image ? feed.itunes.image : feed.image.url
     } else {
       img = feed.items[i].itunes.image
     }
@@ -1442,13 +1486,49 @@ function generateFeed(feed_url, guid, temp, id, font) {
   })
 }
 
+function sendErrorMail(o) {
+  template = fs.readFileSync(path.join(__dirname, "/web/mail_error.mustache"), "utf8")
+
+  renderObj = {
+    file_url : o.url,
+    host_url: process.env.HOST
+  }
+
+  const mailOptions = {
+    from: 'YouPod@youpod.io', // sender address
+    to: o.content.email, // list of receivers
+    subject: `Erreur lors de la génération!`, // Subject line
+    html: mustache.render(template, renderObj)
+  };
+
+  getTransporter((transporter) => {
+    transporter.sendMail(mailOptions, function (err, info) {
+      if(err) return console.log(err)
+    });
+
+    if (o.content.constructor.name == "Video") {
+      fs.unlinkSync(path.join(__dirname, "/tmp/", `overlay_${o.content.id}.png`))
+    } else {
+      fs.unlinkSync(path.join(__dirname, "/tmp/", `social_${o.content.id}.png`))
+    }
+
+    o.content.status = "error"
+    o.content.email = "deleted"
+    o.content.save();
+  }) 
+}
+
 function downloadAudioSocial(id, audio_url) {
   console.log("Social " + id + " Démarage du téléchargement")
-  download(audio_url).then(data => {
-    fs.writeFileSync(path.join(__dirname, `/tmp/social_${id}.mp3`), data);
-    console.log("Social " + id + " Fichier téléchargé!");
-    generateVideoSocial(id);
-  });
+  bdd.Social.findByPk(id).then(social => {
+    checkIfMP3(audio_url, sendErrorMail, {url: audio_url, content: social}, () => {
+      download(audio_url).then(data => {
+        fs.writeFileSync(path.join(__dirname, `/tmp/social_${id}.mp3`), data);
+        console.log("Social " + id + " Fichier téléchargé!");
+        generateVideoSocial(id);
+      });
+    })
+  })
 }
 
 function downloadAudioCustom(id, audio_url, ep_title) {
@@ -1462,11 +1542,15 @@ function downloadAudioCustom(id, audio_url, ep_title) {
 
 function downloadAudio(id, audio_url, ep_title) {
   console.log(id + " Démarage du téléchargement")
-  download(audio_url).then(data => {
-    fs.writeFileSync(path.join(__dirname, `/tmp/audio_${id}.mp3`), data);
-    console.log(id + " Fichier téléchargé!");
-    generateVideo(id, ep_title);
-  });
+  bdd.Video.findByPk(id).then(video => {
+    checkIfMP3(audio_url, sendErrorMail, {url: audio_url, content: video}, () => {
+      download(audio_url).then(data => {
+        fs.writeFileSync(path.join(__dirname, `/tmp/audio_${id}.mp3`), data);
+        console.log(id + " Fichier téléchargé!");
+        generateVideo(id, ep_title);
+      });
+    })  
+  })
 }
 
 function generateVideoSocial(id) {
@@ -1477,7 +1561,7 @@ function generateVideoSocial(id) {
 
 	s = splited[0] * 3600 + splited[1] * 60 + parseInt(splited[2])
 
-	var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/social_${id}.png`, "-filter_complex", 'overlay', "-vcodec", "libvpx-vp9", "-stream_loop", -1, "-i", `./assets/bars.webm`, "-ss", s, "-i", `./tmp/social_${id}.mp3`, "-t", social.duration, "-map", "2:a", "-acodec", "aac", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
+	var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/social_${id}.png`, "-filter_complex", 'overlay', "-vcodec", "libvpx-vp9", "-stream_loop", -1, "-i", `./assets/bars.webm`, "-ss", s, "-i", `./tmp/social_${id}.mp3`, "-t", social.duration, "-map", "2:a", "-acodec", "aac", "-b:a", "192k", "-ac", "2", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
   
 	child.stdout.on('data', function (data) {
 	  console.log("Social " +id + ' stdout: ' + data);
@@ -1520,7 +1604,7 @@ function generateVideo(id, ep_title) {
   });
 
   ol.on('close', function (code) {
-    var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/loop_${id}.mp4`, "-i", `./tmp/audio_${id}.mp3`, "-c:v", "copy", "-c:a", "aac", "-shortest", "-map", "0:v", "-map", "1:a", `${process.env.EXPORT_FOLDER}/output_${id}.mp4`]);
+    var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/loop_${id}.mp4`, "-i", `./tmp/audio_${id}.mp3`, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ac", "2", "-shortest", "-map", "0:v", "-map", "1:a", `${process.env.EXPORT_FOLDER}/output_${id}.mp4`]);
 
     child.stdout.on('data', function (data) {
       console.log(id + ' stdout: ' + data);

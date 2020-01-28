@@ -1,5 +1,15 @@
 # Changelog
 ## Version 1.2
+### Version 1.2.4
+#### Ajouts
+- Modification du footer des pages web (ajout lien Twitter, Github et confidentialité)
+- Vérification du MP3 pour les créations custom
+- Vérification du MP3 pour les créations à partir de flux
+- Changement de l'encodage (192kbps)
+
+#### Corrections
+- Correction bug d'affichage de l'image
+
 ### Version 1.2.3
 #### Corrections
 - Bug dans la recherche dans le flux quand l'épisode ne contenait pas d'enclosure
