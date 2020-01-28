@@ -1561,7 +1561,7 @@ function generateVideoSocial(id) {
 
 	s = splited[0] * 3600 + splited[1] * 60 + parseInt(splited[2])
 
-	var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/social_${id}.png`, "-filter_complex", 'overlay', "-vcodec", "libvpx-vp9", "-stream_loop", -1, "-i", `./assets/bars.webm`, "-ss", s, "-i", `./tmp/social_${id}.mp3`, "-t", social.duration, "-map", "2:a", "-acodec", "aac", "-b:a", "192k", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
+	var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/social_${id}.png`, "-filter_complex", 'overlay', "-vcodec", "libvpx-vp9", "-stream_loop", -1, "-i", `./assets/bars.webm`, "-ss", s, "-i", `./tmp/social_${id}.mp3`, "-t", social.duration, "-map", "2:a", "-acodec", "aac", "-b:a", "192k", "-ac", "2", `${process.env.EXPORT_FOLDER}/social_${id}.mp4`]);
   
 	child.stdout.on('data', function (data) {
 	  console.log("Social " +id + ' stdout: ' + data);
@@ -1604,7 +1604,7 @@ function generateVideo(id, ep_title) {
   });
 
   ol.on('close', function (code) {
-    var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/loop_${id}.mp4`, "-i", `./tmp/audio_${id}.mp3`, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", "-map", "0:v", "-map", "1:a", `${process.env.EXPORT_FOLDER}/output_${id}.mp4`]);
+    var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/loop_${id}.mp4`, "-i", `./tmp/audio_${id}.mp3`, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ac", "2", "-shortest", "-map", "0:v", "-map", "1:a", `${process.env.EXPORT_FOLDER}/output_${id}.mp4`]);
 
     child.stdout.on('data', function (data) {
       console.log(id + ' stdout: ' + data);
