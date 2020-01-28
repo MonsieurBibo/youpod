@@ -2,7 +2,7 @@
 ## Version 1.2
 ### Version 1.2.4
 #### Ajouts
-- Modification du footer des pages web
+- Modification du footer des pages web (ajout lien Twitter, Github et confidentialité)
 - Vérification du MP3 pour les créations custom
 - Vérification du MP3 pour les créations à partir de flux
 - Changement de l'encodage (192kbps)
