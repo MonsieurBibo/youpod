@@ -2,11 +2,11 @@ const fs = require('fs');
 const {google} = require('googleapis');
 const readline = require("readline")
 const Parser = require("rss-parser");
-const bdd = require(__dirname + "/models/index.js")
+const bdd = require("../models/index.js")
 
 var parser = new Parser();
 
-module.exports.getGoogleUrl = function(cb) {
+module.exports.login = (req, res, next) => {
 	var oauth2Client;
 	getOption("GOOGLE_ID", (GOOGLE_ID)=> {
 		getOption("GOOGLE_SECRET", (GOOGLE_SECRET) => {
@@ -28,8 +28,15 @@ module.exports.getGoogleUrl = function(cb) {
 				scope: scopes
 			});
 			
-			cb(google_url);
+			res.redirect(google_url);
 		})
+	})
+}
+
+module.exports.redirect = (req, res, next) => {
+	req.session.google_code = req.query.code
+	req.session.save((err) => {
+	  res.redirect("/")
 	})
 }
 
