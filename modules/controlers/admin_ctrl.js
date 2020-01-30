@@ -197,7 +197,7 @@ module.exports = {
                             })
 
                             render_object.IS_GMAIL = render_object.MAIL_SERVICE == "gmail" ?  MAIL_SERVICE : undefined,
-                            render_object.ENABLE_YOUTUBE = render_object.ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
+                            render_object.ENABLE_YOUTUBE = render_object.ENABLE_YOUTUBE == false ? undefined : render_object.ENABLE_YOUTUBE,
                             
                             res.setHeader("content-type", "text/html");
                             res.send(mustache.render(template, render_object, partials))

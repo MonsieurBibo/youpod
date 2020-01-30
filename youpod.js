@@ -43,9 +43,9 @@ app.use("/static", express.static('./web/static'));
 var csrfProtection = csurf()
 
 //Reprise des générations en cas d'erreur
-flush();
-setInterval(flush, 1000 * 60 * 15);
-restartGeneration();
+m.generation.flush();
+setInterval(m.generation.flush, 1000 * 60 * 15);
+m.generation.restart_generation();
  
 var parser = new Parser();
 
@@ -53,253 +53,31 @@ var parser = new Parser();
 app.get("/yt/login", m.yt.login)
 app.get("/yt/redirect", m.yt.redirect)
 
-app.get("/login", csrfProtection, m.login.login)
+// Routes Connection
+app.get("/login", csrfProtection, m.login_ctrl.login)
+app.post("/authenticate", csrfProtection, m.login_ctrl.authenticate)
 
 // Routes Admin
-app.post("/admin/authenticate", csrfProtection, m.admin.authenticate);
-app.get("/admin/login", csrfProtection, m.admin.login);
-app.post("/admin/action", m.admin.check_logged, m.admin.action);
-app.post("/admin/prio/social/:id", m.admin.check_logged, m.admin.prio.social);
-app.post("/admin/prio/:id", m.admin.check_logged, m.admin.prio.video);
-app.post("/admin/option", m.admin.check_logged, m.admin.option);
-app.get("/admin/queue", m.admin.check_logged, m.admin.queue);
-app.get("/admin", m.admin.check_logged, m.admin.index);
+app.post("/admin/authenticate", csrfProtection, m.admin_ctrl.authenticate);
+app.get("/admin/login", csrfProtection, m.admin_ctrl.login);
+app.post("/admin/action", m.admin_ctrl.check_logged, m.admin_ctrl.action);
+app.post("/admin/prio/social/:id", m.admin_ctrl.check_logged, m.admin_ctrl.prio.social);
+app.post("/admin/prio/:id", m.admin_ctrl.check_logged, m.admin_ctrl.prio.video);
+app.post("/admin/option", m.admin_ctrl.check_logged, m.admin_ctrl.option);
+app.get("/admin/queue", m.admin_ctrl.check_logged, m.admin_ctrl.queue);
+app.get("/admin", m.admin_ctrl.check_logged, m.admin_ctrl.index);
 
-app.post("/authenticate", csrfProtection, (req, res) => {
-  if (req.body.password != undefined) {
-    getOption("GEN_PWD", (GEN_PWD) => {
-      if (req.body.password != GEN_PWD) {
-        req.session.message = "Mot de passe incorrect";
-  
-        req.session.save(function(err) {
-          res.redirect("/login?return=" + req.body.return)
-        })
-      } else {
-        req.session.logged = true;
-        req.session.message = undefined;
-  
-        req.session.save(function(err) {
-          if (req.body.return != "") {
-            res.redirect("/" + req.body.return)
-          } else {
-            res.redirect("/")
-          }
-        })
-      }
-    })
-  } else {
-    res.redirect("/login")
-  }
-})
-
-app.post("/social/add", csrfProtection, (req, res) => {
-  getOption("GEN_PWD", (GEN_PWD) => { 
-    if (req.body.email != undefined && req.body.timestart != undefined && req.body.timestart.match(/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/).length == 1 && req.body.duration != undefined) {
-      checkIfRss(req.body.rss, (isRss) => {
-        if(isRss) {
-            if (GEN_PWD == "") {
-              getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
-                checkIfExistSocial(req, res, guid, () => {
-                  bdd.Social.create({
-                    rss: req.body.rss,
-                    email: req.body.email,
-                    access_token: randtoken.generate(32),
-                    startTime: req.body.timestart,
-                    duration: req.body.duration,
-                    guid: guid
-                  }).then((social) => {
-                    initNewGeneration();
-                    res.sendFile(path.join(__dirname, "/web/done.html"))
-                  })
-                })
-              })
-            } else {
-              if (req.session.logged != undefined) {
-                getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
-                  checkIfExistSocial(req, res, guid, () => {
-                    bdd.Social.create({
-                      rss: req.body.rss,
-                      email: req.body.email,
-                      access_token: randtoken.generate(32),
-                      startTime: req.body.timestart,
-                      duration: req.body.duration,
-                      guid: guid
-                    }).then((social) => {
-                      initNewGeneration();
-                      res.sendFile(path.join(__dirname, "/web/done.html"))
-                    })
-                  })
-                })
-              } else {
-                res.redirect("/login")
-              }
-            }
-        } else {
-          template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-        
-          var render_object = {
-          "err_message": "L'URL que vous avez entré " + req.body.rss + " n'est pas un flux RSS valide!"
-          }
-        
-          res.setHeader("content-type", "text/html");
-          res.send(mustache.render(template, render_object))
-        }
-      }) 
-    } else {
-      res.status(400).send("Votre requète n'est pas complète...")
-    }
-  })
-})
-
-app.post("/social/custom/add", csrfProtection, (req, res) => {
-	getOption("GEN_PWD", (GEN_PWD) => { 
-		if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.audioURL != undefined && req.body.timestart != undefined && req.body.timestart.match(/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/).length == 1 && req.body.duration != undefined) {
-      checkIfMP3(req.body.audioURL, sendErrorPage, { request: res }, () => {
-        if (GEN_PWD == "") {
-          checkIfExistSocialCustom(req, res, () => {
-            bdd.Social.create({
-              email: req.body.email,
-              rss: "__custom__",
-              access_token: randtoken.generate(32),
-              epTitle: req.body.epTitle,
-              imgLink: req.body.imgURL,
-              podTitle: req.body.podTitle,
-              audioLink: req.body.audioURL,
-              startTime: req.body.timestart,
-              duration: req.body.duration
-            }).then((video) => {
-              initNewGeneration();
-              res.sendFile(path.join(__dirname, "/web/done.html"))
-            })
-          })
-        } else {
-          if (req.session.logged != undefined) {
-            checkIfExistSocialCustom(req, res, () => {
-              bdd.Social.create({
-                email: req.body.email,
-                rss: "__custom__",
-                access_token: randtoken.generate(32),
-                epTitle: req.body.epTitle,
-                imgLink: req.body.imgURL,
-                podTitle: req.body.podTitle,
-                audioLink: req.body.audioURL,
-                startTime: req.body.timestart,
-                duration: req.body.duration
-              }).then((video) => {
-                initNewGeneration();
-                res.sendFile(path.join(__dirname, "/web/done.html"))
-              })
-            })
-          } else {
-            res.redirect("/login")
-          }
-        }
-      })
-		} else {
-			res.status(400).send("Votre requète n'est pas complète...")
-		}
-	})
-  })
-
-app.get("/social/custom", csrfProtection, (req, res) => {
-	getOption("GEN_PWD", (GEN_PWD) => { 
-	  getOption("KEEPING_TIME", (KEEPING_TIME) => {
-		if (GEN_PWD == "") {
-		  bdd.Social.count({
-			where: {
-			  [Op.or]: [{status: "waiting"}, {status: "during"}]
-			}
-		  }).then((nb) => {
-			template = fs.readFileSync(path.join(__dirname, "/web/social_custom.mustache"), "utf8")
-	  
-			var render_object = {
-			  "waiting_list": nb,
-			  "keeping_time": KEEPING_TIME,
-			  "csrfToken": req.csrfToken
-			}
-		  
-			res.setHeader("content-type", "text/html");
-			res.send(mustache.render(template, render_object, partials))
-		  })
-	  
-		} else {
-		  if (req.session.logged != undefined) {
-			bdd.Social.count({
-			  where: {
-				[Op.or]: [{status: "waiting"}, {status: "during"}]
-			  }
-			}).then((nb) => {
-			  template = fs.readFileSync(path.join(__dirname, "/web/social_custom.mustache"), "utf8")
-		
-			  var render_object = {
-				"waiting_list": nb,
-				"keeping_time": KEEPING_TIME,
-				"csrfToken": req.csrfToken
-			  }
-			
-			  res.setHeader("content-type", "text/html");
-			  res.send(mustache.render(template, render_object, partials))
-			})
-		  } else {
-			res.redirect("/login?return=social/custom")
-		  }
-		}
-	  })
-	})
-  })
-
-app.get("/social", csrfProtection, (req, res) => {
-  getOption("GEN_PWD", (GEN_PWD) => { 
-    getOption("KEEPING_TIME", (KEEPING_TIME) => {
-      if (GEN_PWD == "") {
-        bdd.Social.count({
-          where: {
-            [Op.or]: [{status: "waiting"}, {status: "during"}]
-          }
-        }).then((nb) => {
-          template = fs.readFileSync(path.join(__dirname, "/web/social.mustache"), "utf8")
-    
-          var render_object = {
-            "waiting_list": nb,
-            "keeping_time": KEEPING_TIME,
-            "csrfToken": req.csrfToken
-          }
-        
-          res.setHeader("content-type", "text/html");
-          res.send(mustache.render(template, render_object, partials))
-        })
-    
-      } else {
-        if (req.session.logged != undefined) {
-          bdd.Social.count({
-            where: {
-              [Op.or]: [{status: "waiting"}, {status: "during"}]
-            }
-          }).then((nb) => {
-            template = fs.readFileSync(path.join(__dirname, "/web/social.mustache"), "utf8")
-      
-            var render_object = {
-              "waiting_list": nb,
-              "keeping_time": KEEPING_TIME,
-              "csrfToken": req.csrfToken
-            }
-          
-            res.setHeader("content-type", "text/html");
-            res.send(mustache.render(template, render_object, partials))
-          })
-        } else {
-          res.redirect("/login?return=social")
-        }
-      }
-    })
-  })
-})
+// Routes Social
+app.post("/social/add", csrfProtection, m.login_ctrl.check_logged, m.social_ctrl.add)
+app.post("/social/custom/add", csrfProtection, m.login_ctrl.check_logged, m.social_ctrl.add_custom);
+app.get("/social/custom", csrfProtection, m.login_ctrl.check_logged, m.social_ctrl.custom);
+app.get("/social", csrfProtection, m.login_ctrl.check_logged, m.social_ctrl.index);
 
 app.get("/custom", csrfProtection, (req, res) => {
-  getOption("GEN_PWD", (GEN_PWD) => {
-    getOption("KEEPING_TIME", (KEEPING_TIME) => {
-      getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
-        getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
+  m.utils.get_option("GEN_PWD", (GEN_PWD) => {
+    m.utils.get_option("KEEPING_TIME", (KEEPING_TIME) => {
+      m.utils.get_option("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
+        m.utils.get_option("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
           if (GEN_PWD == "") {
             bdd.Video.count({
               where: {
@@ -353,10 +131,10 @@ app.get("/custom", csrfProtection, (req, res) => {
 })
 
 app.get("/", csrfProtection, (req, res) => {
-  getOption("GEN_PWD", (GEN_PWD) => {
-    getOption("KEEPING_TIME", (KEEPING_TIME) => {
-      getOption("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
-        getOption("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
+  m.utils.get_option("GEN_PWD", (GEN_PWD) => {
+    m.utils.get_option("KEEPING_TIME", (KEEPING_TIME) => {
+      m.utils.get_option("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
+        m.utils.get_option("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
           if (GEN_PWD == "") {
             bdd.Video.count({
               where: {
@@ -461,7 +239,7 @@ app.get("/download/:id", (req, res) => {
 })
 
 app.post("/addvideo", csrfProtection, (req, res) => {
-  getOption("GEN_PWD", (GEN_PWD) => {
+  m.utils.get_option("GEN_PWD", (GEN_PWD) => {
     if (GEN_PWD == "") {
       if (req.body.email != undefined && req.body.rss != undefined) {
         checkIfRss(req.body.rss, (is_rss) => {
@@ -582,25 +360,8 @@ function checkIfExistVideo(req, res, guid, cb) {
   })
 }
 
-function getLastGuid(feed_url, guid, __callback) {
-	if (guid != undefined) {
-		__callback(guid)
-	} else {
-		parser.parseURL(feed_url, (err, feed) => {
-			__callback(feed.items[0].guid)
-			
-		  })
-	}
-}
-
-function checkIfRss(feed_url, __callback) {
-  parser.parseURL(feed_url, (err, feed) => {
-    __callback(feed != undefined);
-  })
-}
-
 app.post("/addvideocustom", csrfProtection, (req, res) => {
-  getOption("GEN_PWD", (GEN_PWD) => { 
+  m.utils.get_option("GEN_PWD", (GEN_PWD) => { 
     if (GEN_PWD == "") {
       if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
         checkIfMP3(req.body.audioURL, sendErrorPage, { request: res}, ()=> {
@@ -666,45 +427,6 @@ app.post("/addvideocustom", csrfProtection, (req, res) => {
   })
 })
 
-function sendErrorPage(o) {
-  template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-
-  var render_object = {
-    "err_message": "L'audio que vous avez entré n'est pas un MP3"
-  }
-
-  o.request.setHeader("content-type", "text/html");
-  o.request.send(mustache.render(template, render_object))
-}
-
-function checkIfMP3(url, redirectError, param, cb) {
-  getFinalURL(url, (true_url) => {
-    fetch(true_url)
-    .then((data) => {
-      contentType = data.headers.get("content-type")
-  
-      if (contentType && contentType == "audio/mpeg") {
-        cb()
-      } else {
-        redirectError(param)
-      }
-    })
-    .catch(err => {
-    })
-  })
-}
-
-function getFinalURL(url, cb) {
-  fetch(url)
-  .then((data) => {
-    if (data.redirected) {
-      getFinalURL(data.url, cb)
-    } else {
-      cb(data.url)
-    }
-  })
-}
-
 function checkIfExistCustom(req, res, cb) {
   bdd.Video.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.imgURL, audioURL: req.body.audioURL, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
     if (video == null) {
@@ -722,42 +444,8 @@ function checkIfExistCustom(req, res, cb) {
   })
 }
 
-function checkIfExistSocial(req, res, guid, cb) {
-	bdd.Social.findOne({where: {email: req.body.email, rss: req.body.rss, guid:guid, startTime: req.body.timestart, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
-		if (video == null) {
-		  cb();
-		} else {
-		  template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-	
-		  var render_object = {
-			"err_message": "Cette préview est déjà dans la liste d'attente!"
-		  }
-		
-		  res.setHeader("content-type", "text/html");
-		  res.send(mustache.render(template, render_object))
-		}
-	  })
-}
-
-function checkIfExistSocialCustom(req, res, cb) {
-  bdd.Social.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, imgLink: req.body.imgURL, audioLink: req.body.audioURL, startTime: req.body.timestart, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
-    if (video == null) {
-      cb();
-    } else {
-      template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-
-      var render_object = {
-        "err_message": "Cette préview est déjà dans la liste d'attente!"
-      }
-    
-      res.setHeader("content-type", "text/html");
-      res.send(mustache.render(template, render_object))
-    }
-  })
-}
-
 app.post("/api/video", (req, res) => {
-  getOption("API_PWD", (API_PWD) => {
+  m.utils.get_option("API_PWD", (API_PWD) => {
     if (req.query.pwd != undefined && req.query.pwd == API_PWD) {
       if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
         if (req.body.font == undefined) {
@@ -800,7 +488,7 @@ app.post("/api/video", (req, res) => {
 })
 
 app.get("/api/video/:id", (req, res) => {
-  getOption("API_PWD", (API_PWD) => { 
+  m.utils.get_option("API_PWD", (API_PWD) => { 
     if (req.query.pwd != undefined && req.query.pwd == API_PWD) {
       if (req.query.token != undefined) {
         bdd.Video.findByPk(req.params.id).then((video) => {
@@ -812,7 +500,7 @@ app.get("/api/video/:id", (req, res) => {
                 download_url: process.env.HOST + "/download/" + video.id + "?token=" + video.access_token
               }
     
-              getOption("KEEPING_TIME", (KEEPING_TIME) => {
+              m.utils.get_option("KEEPING_TIME", (KEEPING_TIME) => {
                 if (video.status == "finished") {
                   returnObj.delete_timestamp = parseInt(video.end_timestamp) + (KEEPING_TIME * 60 * 60 * 1000) 
                 }
@@ -874,118 +562,6 @@ app.get("/api/feed", (req, res) => {
 
   })
 })
-
-// FONCTION DE GENERATIONS
-function restartGeneration() {
-  console.log("Reprise de générations...")
-  bdd.Video.findAll({where: {status: "during"}}).then((videos) => {
-    videos.forEach((v) => {
-      if (v.rss != "__custom__") {
-        generateFeed(v.rss, v.guid, v.template, v.id, v.font)
-      } else {
-        generateImgCustom(v.id);
-      }
-    })
-  })
-
-  bdd.Social.findAll({where: {status: "during"}}).then((socials) => {
-    socials.forEach((p) => {
-		if (p.rss != "__custom__") {
-			generateImgSocial(p.rss, p.guid, p.id);
-		}
-    })
-  })
-
-  initNewGeneration();
-}
-
-function flush() {
-  getOption("KEEPING_TIME", (KEEPING_TIME) => {
-    bdd.Video.findAll({where: {status: "finished"}}).then((videos) => {
-      if (videos.length >=1) {
-        for (i = 0; i < videos.length; i++) {
-          time = Date.now() - videos[i].end_timestamp
-          time = time / (1000 * 60 * 60);
-          
-          if (time > KEEPING_TIME) {
-            try {
-              fs.unlinkSync(path.join(m.utils.path_evalute(process.env.EXPORT_FOLDER), `output_${videos[i].id}.mp4`))
-            } catch (err) {
-              console.log(`Fichier output_${videos[i].id}.mp4 déjà supprimé`)
-            }
-            videos[i].status = "deleted"
-            videos[i].save()
-            console.log("Flush video " + videos[i].id)
-      
-          }
-        }
-      }
-    })
-
-    bdd.Social.findAll({where: {status: "finished"}}).then((socials) => {
-      if (socials.length >=1) {
-        for (i = 0; i < socials.length; i++) {
-          time = Date.now() - socials[i].end_timestamp
-          time = time / (1000 * 60 * 60);
-      
-          if (time > KEEPING_TIME) {
-            try {
-              fs.unlinkSync(path.join(m.utils.path_evalute(process.env.EXPORT_FOLDER), `social_${socials[i].id}.mp4`))
-            } catch (err) {
-              console.log(`Fichier social_${socials[i].id}.mp4 déjà supprimé`)
-            }
-
-            socials[i].status = "deleted"
-            socials[i].save()
-            console.log("Flush social " + socials[i].id)
-      
-          }
-        }
-      } 
-    })
-  })
-  
-}
-
-function initNewGeneration() {
-  bdd.Video.count({where: {status: "during"}}).then((nb) => {
-    getOption("MAX_DURING", ((MAX_DURING) => {
-      if (nb < MAX_DURING) {
-        bdd.Video.findOne({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((video) => {
-          if(video != null) {
-            video.status = 'during'
-            video.save().then((video) => {
-              if (video.rss != "__custom__") {
-                generateFeed(video.rss, video.guid, video.template, video.id, video.font)
-              } else {
-                generateImgCustom(video.id);
-              }
-            })
-          }
-        })
-      }
-    }))
-  })
-
-  bdd.Social.count({where: {status: "during"}}).then((nb) => {
-    getOption("MAX_DURING_SOCIAL", ((MAX_DURING_SOCIAL) => {
-      if (nb < MAX_DURING_SOCIAL) {
-        bdd.Social.findOne({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((social) => {
-          if (social != null) {
-            social.status = "during"
-            social.save().then((social) => {
-				if (social.rss != "__custom__") {
-					generateImgSocial(social.rss, social.guid, social.id);
-				} else {
-					generateImgSocialCustom(social.id)
-				}
-            })
-          }
-        })
-      }
-    }))
-  })
-}
 
 function generateImgSocial(feed_url, guid, id) {
 	console.log("Social " + id + " Démarage de la création")
@@ -1345,7 +921,7 @@ function sendMailSocial(id) {
 		template = fs.readFileSync(path.join(__dirname, "/web/mail_social_custom.mustache"), "utf8")
 	  }
     
-    getOption("KEEPING_TIME", (KEEPING_TIME) => {
+    m.utils.get_option("KEEPING_TIME", (KEEPING_TIME) => {
 		if (social.rss != "__custom__") {
 			renderObj = {
 				"feed_url": social.rss,
@@ -1383,7 +959,7 @@ function sendMailSocial(id) {
 
 function sendMail(id, ep_title) {
   bdd.Video.findByPk(id).then((video) => {
-    getOption("KEEPING_TIME", (KEEPING_TIME) => { 
+    m.utils.get_option("KEEPING_TIME", (KEEPING_TIME) => { 
       if (video.rss != "__custom__") {
         template = fs.readFileSync(path.join(__dirname, "/web/mail.mustache"), "utf8")
         renderObj = {
@@ -1403,7 +979,7 @@ function sendMail(id, ep_title) {
         }
       }
 
-      getOption("SMTP_DOMAIN", (SMTP_DOMAIN) => {
+      m.utils.get_option("SMTP_DOMAIN", (SMTP_DOMAIN) => {
         const mailOptions = {
           from: 'YouPod@' + SMTP_DOMAIN, // sender address
           to: video.email, // list of receivers
@@ -1430,10 +1006,10 @@ function sendMail(id, ep_title) {
 }
 
 function getTransporter(cb) {
-  getOption("MAIL_SERVICE", (MAIL_SERVICE) => {
+  m.utils.get_option("MAIL_SERVICE", (MAIL_SERVICE) => {
     if (MAIL_SERVICE == "gmail") {
-      getOption("GMAIL_ADDR", (GMAIL_ADDR)=> {
-        getOption("GMAIL_PWD", (GMAIL_PWD) => {
+      m.utils.get_option("GMAIL_ADDR", (GMAIL_ADDR)=> {
+        m.utils.get_option("GMAIL_PWD", (GMAIL_PWD) => {
           transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -1446,10 +1022,10 @@ function getTransporter(cb) {
         })
       })
     } else {
-      getOption("SMTP_HOST", (SMTP_HOST) => {
-        getOption("SMTP_PORT", (SMTP_PORT) => {
-          getOption("SMTP_USERNAME", (SMTP_USERNAME) => {
-            getOption("SMTP_PASSWORD", (SMTP_PASSWORD) => {
+      m.utils.get_option("SMTP_HOST", (SMTP_HOST) => {
+        m.utils.get_option("SMTP_PORT", (SMTP_PORT) => {
+          m.utils.get_option("SMTP_USERNAME", (SMTP_USERNAME) => {
+            m.utils.get_option("SMTP_PASSWORD", (SMTP_PASSWORD) => {
               transporter = nodemailer.createTransport({
                 host: SMTP_HOST,
                 port: SMTP_PORT,
@@ -1466,12 +1042,6 @@ function getTransporter(cb) {
         })
       })
     }
-  })
-}
-
-function getOption(option, cb) {
-  bdd.Option.findByPk(option).then((option) => {
-    cb(option.value)
   })
 }
 
