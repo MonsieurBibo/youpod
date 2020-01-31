@@ -20,9 +20,7 @@ module.exports = {
 					generateImgSocial(p.rss, p.guid, p.id);
 				}
 			})
-		})
-	  
-		(this.init_new_generation)();
+		})	  
 	},
 	flush: () => {
 		utils.get_option("KEEPING_TIME", (KEEPING_TIME) => {

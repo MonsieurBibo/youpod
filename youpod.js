@@ -46,6 +46,7 @@ var csrfProtection = csurf()
 m.generation.flush();
 setInterval(m.generation.flush, 1000 * 60 * 15);
 m.generation.restart_generation();
+m.generation.init_new_generation();
  
 var parser = new Parser();
 
@@ -73,120 +74,11 @@ app.post("/social/custom/add", csrfProtection, m.login_ctrl.check_logged, m.soci
 app.get("/social/custom", csrfProtection, m.login_ctrl.check_logged, m.social_ctrl.custom);
 app.get("/social", csrfProtection, m.login_ctrl.check_logged, m.social_ctrl.index);
 
-app.get("/custom", csrfProtection, (req, res) => {
-  m.utils.get_option("GEN_PWD", (GEN_PWD) => {
-    m.utils.get_option("KEEPING_TIME", (KEEPING_TIME) => {
-      m.utils.get_option("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
-        m.utils.get_option("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
-          if (GEN_PWD == "") {
-            bdd.Video.count({
-              where: {
-                [Op.or]: [{status: "waiting"}, {status: "during"}]
-              }
-            }).then((nb) => {
-              template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
-        
-              var render_object = {
-                "waiting_list": nb,
-                "keeping_time": KEEPING_TIME,
-                "csrfToken": req.csrfToken,
-                "ENABLE_YOUTUBE": ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
-                "yt_logged": req.session.google_code != undefined ? true : false,
-                "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
-              }
-            
-              res.setHeader("content-type", "text/html");
-              res.send(mustache.render(template, render_object, partials))
-            })
-          } else {
-            if (req.session.logged != undefined) {
-              bdd.Video.count({
-                where: {
-                  [Op.or]: [{status: "waiting"}, {status: "during"}]
-                }
-              }).then((nb) => {
-                template = fs.readFileSync(path.join(__dirname, "/web/custom.mustache"), "utf8")
-          
-                var render_object = {
-                  "waiting_list": nb,
-                  "keeping_time": KEEPING_TIME,
-                  "need_pass": GEN_PWD!="",
-                  "csrfToken": req.csrfToken,
-                  "ENABLE_YOUTUBE": ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
-                  "yt_logged": req.session.google_code != undefined ? true : false,
-                  "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
-                }
-              
-                res.setHeader("content-type", "text/html");
-                res.send(mustache.render(template, render_object, partials))
-              })
-            } else {
-              res.redirect("/login?return=custom")
-            }
-          }
-        })
-      })
-    })
-  })
-})
-
-app.get("/", csrfProtection, (req, res) => {
-  m.utils.get_option("GEN_PWD", (GEN_PWD) => {
-    m.utils.get_option("KEEPING_TIME", (KEEPING_TIME) => {
-      m.utils.get_option("GOOGLE_FONT_KEY", (GOOGLE_FONT_KEY) => {
-        m.utils.get_option("ENABLE_YOUTUBE", (ENABLE_YOUTUBE) => {
-          if (GEN_PWD == "") {
-            bdd.Video.count({
-              where: {
-                [Op.or]: [{status: "waiting"}, {status: "during"}]
-              }
-            }).then((nb) => {
-              template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
-          
-              var render_object = {
-                "waiting_list": nb,
-                "keeping_time": KEEPING_TIME,
-                "need_pass": GEN_PWD!="",
-                "csrfToken": req.csrfToken,
-                "ENABLE_YOUTUBE": ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
-                "yt_logged": req.session.google_code != undefined ? true : false,
-                "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
-              }
-            
-              res.setHeader("content-type", "text/html");
-              res.send(mustache.render(template, render_object, partials))
-            })
-          } else {
-            if (req.session.logged != undefined) {
-              bdd.Video.count({
-                where: {
-                  [Op.or]: [{status: "waiting"}, {status: "during"}]
-                }
-              }).then((nb) => {
-                template = fs.readFileSync(path.join(__dirname, "/web/index.mustache"), "utf8")
-            
-                var render_object = {
-                  "waiting_list": nb,
-                  "keeping_time": KEEPING_TIME,
-                  "need_pass": GEN_PWD!="",
-                  "csrfToken": req.csrfToken,
-                  "ENABLE_YOUTUBE": ENABLE_YOUTUBE == false ? undefined : ENABLE_YOUTUBE,
-                  "yt_logged": req.session.google_code != undefined ? true : false,
-                  "GOOGLE_FONT_KEY": GOOGLE_FONT_KEY
-                }
-              
-                res.setHeader("content-type", "text/html");
-                res.send(mustache.render(template, render_object, partials))
-              })
-            } else {
-              res.redirect("/login")
-            }
-          }
-        })
-      })
-    })
-   })
-})
+// Routes Vidéo
+app.post("/addvideo", csrfProtection, m.login_ctrl.check_logged, m.video_ctrl.add)
+app.post("/addvideocustom", csrfProtection, m.login_ctrl.check_logged, m.video_ctrl.add_custom)
+app.get("/custom", csrfProtection, m.login_ctrl.check_logged, m.video_ctrl.custom);
+app.get("/", csrfProtection, m.login_ctrl.check_logged, m.video_ctrl.index);
 
 app.get("/download/social/:id", (req, res) => {
   if (req.query.token != undefined) {
@@ -238,111 +130,6 @@ app.get("/download/:id", (req, res) => {
 
 })
 
-app.post("/addvideo", csrfProtection, (req, res) => {
-  m.utils.get_option("GEN_PWD", (GEN_PWD) => {
-    if (GEN_PWD == "") {
-      if (req.body.email != undefined && req.body.rss != undefined) {
-        checkIfRss(req.body.rss, (is_rss) => {
-          if (is_rss) {
-			getLastGuid(req.body.rss, req.body.selectEp, (guid)=> {
-				checkIfExistVideo(req, res, guid, () => {
-					bdd.Video.create({
-					email: req.body.email,
-					rss: req.body.rss,
-					guid: guid,
-					template: req.body.template,
-					access_token: randtoken.generate(32),
-					font:req.body["font-choice"],
-					googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
-					}).then((video) => {
-						req.session.google_code = undefined
-						req.session.save((err) => {
-						initNewGeneration();
-						res.sendFile(path.join(__dirname, "/web/done.html"))
-						})
-					})
-				})
-			})
-          } else {
-            template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-      
-            var render_object = {
-              "err_message": "L'URL que vous avez entré " + req.body.rss + " n'est pas un flux RSS valide!"
-            }
-          
-            res.setHeader("content-type", "text/html");
-            res.send(mustache.render(template, render_object))
-          }
-        })
-      } else {
-        res.status(400).send("Votre requète n'est pas complète...")
-      }
-    } else {
-      if (req.session.logged != undefined) {
-        if (req.body.email != undefined && req.body.rss != undefined) {
-          checkIfRss(req.body.rss, (is_rss) => {
-            if (is_rss) {
-              if (req.body.selectEp == undefined) {
-                getLastGuid(req.body.rss, (guid)=> {
-                  checkIfExistVideo(req, res, guid, () => {
-                    bdd.Video.create({
-                      email: req.body.email,
-                      rss: req.body.rss,
-                      guid: guid,
-                      template: req.body.template,
-                      access_token: randtoken.generate(32),
-                      font:req.body["font-choice"],
-                      googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
-                    }).then((video) => {
-                      req.session.google_code = undefined
-                      req.session.save((err) => {
-                        initNewGeneration();
-                        res.sendFile(path.join(__dirname, "/web/done.html"))
-                      })
-                    })
-                  })
-                })
-              } else {
-                checkIfExistVideo(req, res, req.body.selectEp, () => {
-                  bdd.Video.create({
-                    email: req.body.email,
-                    rss: req.body.rss,
-                    guid: req.body.selectEp,
-                    template: req.body.template,
-                    access_token: randtoken.generate(32),
-                    font:req.body["font-choice"],
-                    googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
-                  }).then((video) => {
-                    req.session.google_code = undefined
-                    req.session.save((err) => {
-                      initNewGeneration();
-                      res.sendFile(path.join(__dirname, "/web/done.html"))
-                    })
-                  })
-                })
-              }
-            } else {
-              template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-      
-              var render_object = {
-                "err_message": "L'URL que vous avez entré " + req.body.rss + " n'est pas un flux RSS valide!"
-              }
-            
-              res.setHeader("content-type", "text/html");
-              res.send(mustache.render(template, render_object))
-            }
-          })
-        } else {
-          res.status(400).send("Votre requète n'est pas complète...")
-        }
-      } else {
-        res.redirect("/login")
-      }
-    }
-  })
-
-})
-
 function checkIfExistVideo(req, res, guid, cb) {
   bdd.Video.findOne({where: {email: req.body.email, rss: req.body.rss, guid: guid, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
     if (video == null) {
@@ -359,73 +146,6 @@ function checkIfExistVideo(req, res, guid, cb) {
     }
   })
 }
-
-app.post("/addvideocustom", csrfProtection, (req, res) => {
-  m.utils.get_option("GEN_PWD", (GEN_PWD) => { 
-    if (GEN_PWD == "") {
-      if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
-        checkIfMP3(req.body.audioURL, sendErrorPage, { request: res}, ()=> {
-          checkIfExistCustom(req, res, () => {
-            console.log(req.body.imgURL)
-            bdd.Video.create({
-              email: req.body.email,
-              rss: "__custom__",
-              template: req.body.template,
-              access_token: randtoken.generate(32),
-              epTitle: req.body.epTitle,
-              epImg: req.body.imgURL,
-              podTitle: req.body.podTitle,
-              podSub: req.body.podSub,
-              audioURL: req.body.audioURL,
-              font: req.body["font-choice"],
-              googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
-            }).then((video) => {
-              req.session.google_code = undefined
-              req.session.save((err) => {
-                initNewGeneration();
-                res.sendFile(path.join(__dirname, "/web/done.html"))
-              })
-            })
-          })
-        })
-      } else {
-        res.status(400).send("Votre requète n'est pas complète...")
-      }
-    } else {
-      if (req.session.logged != undefined) {
-        if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {  
-          checkIfMP3(req.body.audioURL, sendErrorPage, {request: res}, ()=> { 
-            checkIfExistCustom(req, res, () => {
-              bdd.Video.create({
-                email: req.body.email,
-                rss: "__custom__",
-                template: req.body.template,
-                access_token: randtoken.generate(32),
-                epTitle: req.body.epTitle,
-                epImg: req.body.imgURL,
-                podTitle: req.body.podTitle,
-                podSub: req.body.podSub,
-                audioURL: req.body.audioURL,
-                font: req.body["font-choice"],
-                googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
-              }).then((video) => {
-                req.session.google_code = undefined
-                req.session.save((err) => {
-                  initNewGeneration();
-                  res.sendFile(path.join(__dirname, "/web/done.html"))
-                })
-              })
-            })
-          })
-        } else {
-          res.status(400).send("Votre requète n'est pas complète...")
-        }
-      } else {
-        res.redirect("/login")
-      }
-    }
-  })
-})
 
 function checkIfExistCustom(req, res, cb) {
   bdd.Video.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.imgURL, audioURL: req.body.audioURL, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
