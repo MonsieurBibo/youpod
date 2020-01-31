@@ -1,4 +1,4 @@
-const bdd = require("../../models/index.js")
+const bdd = require("../models/index.js")
 const Op = bdd.Sequelize.Op;
 const fs = require('fs');
 const path = require("path");
@@ -6,6 +6,11 @@ const utils = require("./utils")
 const getMP3Duration = require('get-mp3-duration')
 const generation = require("./generation")
 const mustache = require("mustache");
+const { spawn } = require('child_process');
+const puppeteer = require('puppeteer');
+const Parser = require("rss-parser");
+
+var parser = new Parser();
 
 function generate_image(string, video, audio, title) {
     console.log(video.id + " Génération de l'image");
@@ -169,17 +174,17 @@ module.exports = {
             if (video.template != null && video.template != "") {
               template = video.template
             } else {
-              template = fs.readFileSync(path.join(__dirname, "/template/default.mustache"), "utf8");
+              template = fs.readFileSync(path.join(__dirname, "../template/default.mustache"), "utf8");
             }
 
-            if (video.feed != "__custom__") {
+            if (video.rss != "__custom__") {
                 // Si la vidéos est à base d'un flux RSS
-                parser.parseURL(video.feed, (err, lFeed) => {
+                parser.parseURL(video.rss, (err, lFeed) => {
                     console.log(id + " Récupération du flux")
                     feed = lFeed
 
                     i = 0;
-                    while(feed.items[i].guid != guid && i < feed.items.length) {
+                    while(feed.items[i].guid != video.guid && i < feed.items.length) {
                         i++;
                     }
                 
@@ -203,13 +208,13 @@ module.exports = {
                         "epTitle": feed.items[i].title,
                         "podTitle": feed.title,
                         "podSub": feed.itunes.subtitle,
-                        "font_url": font.replace(/ /g, "+"),
-                        "font": font
+                        "font_url": video.font.replace(/ /g, "+"),
+                        "font": video.font
                     }
                   
                     string = mustache.render(template, renderObj);
                   
-                    generate_image(string, video, feed.items[i].enclosure, feed.items[i].title);
+                    generate_image(string, video, feed.items[i].enclosure.url, feed.items[i].title);
                 })
             } else {
                 // Si la vidéos est personalisée

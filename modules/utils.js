@@ -3,6 +3,7 @@ const bdd = require("../models/index.js")
 const Parser = require("rss-parser");
 const nodemailer = require("nodemailer");
 const mustache = require("mustache");
+const fetch = require('node-fetch');
 
 var parser = new Parser();
 
