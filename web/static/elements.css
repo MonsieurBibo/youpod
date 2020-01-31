@@ -502,6 +502,9 @@ textarea {
     border-radius: 10px;
     padding-bottom: 30px;
 }
+.messageframe a{
+    text-decoration: underline;
+}
 
 .parameters{
     background-color: black;
@@ -530,10 +533,7 @@ textarea {
 .paraminfo{
     margin-left: 10px;
 }
-.leave {
-    color: white;
-    text-decoration: underline;
-}
+
 .submessage{
     font-size: 60%;
 }
@@ -547,7 +547,7 @@ textarea {
     margin-bottom: 2rem;
     padding-top: 2rem;
 }
-
 .footer a{
     text-decoration: underline;
 }
+
