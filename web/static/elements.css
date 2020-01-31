@@ -50,6 +50,10 @@ img{
     flex-direction: column;
 
 }
+
+.grow {
+    flex-grow: 1;
+}
 /*Logo */
 .logo{
     width: 80%;
@@ -228,6 +232,8 @@ img{
     margin-top: 20px;
 }
 
+
+
 .radiopoint{
     display: flex;
     flex-direction: row;
@@ -253,6 +259,11 @@ img{
     max-width: 200px;
     width: 24vw;
 }
+
+.radiosmall {
+    max-width: 50px;
+}
+
 .radiolabel{
     display: flex;
     flex-direction: column;
@@ -336,7 +347,6 @@ label {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding-bottom: 20px;
     width: 100%;
   }
   form h4 {
