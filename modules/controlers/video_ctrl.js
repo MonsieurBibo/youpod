@@ -5,6 +5,8 @@ const path = require("path");
 const mustache = require("mustache");
 const Op = bdd.Sequelize.Op;
 const generation = require("../generation")
+const videoModule = require("../video")
+const randtoken = require('rand-token');
 
 module.exports = {
     index: (req, res, next) => {
@@ -67,15 +69,15 @@ module.exports = {
             utils.check_if_rss(req.body.rss, (is_rss) => {
                 if (is_rss) {
                     utils.get_last_guid(req.body.rss, req.body.selectEp, (guid)=> {
-                        checkIfExistVideo(req, res, guid, () => {
-                            bdd.Video.create({
-                            email: req.body.email,
-                            rss: req.body.rss,
-                            guid: guid,
-                            template: req.body.template,
-                            access_token: randtoken.generate(32),
-                            font:req.body["font-choice"],
-                            googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
+                        videoModule.check_if_exist(req, res, guid, () => {
+                                bdd.Video.create({
+                                email: req.body.email,
+                                rss: req.body.rss,
+                                guid: guid,
+                                template: req.body.template,
+                                access_token: randtoken.generate(32),
+                                font:req.body["font-choice"],
+                                googleToken: req.body.publishYT != undefined && req.session.google_code != undefined ? req.session.google_code : undefined
                             }).then((video) => {
                                 req.session.google_code = undefined
                                 req.session.save((err) => {
@@ -103,7 +105,7 @@ module.exports = {
     add_custom: (req, res, next) => {
         if (req.body.email != undefined && req.body.imgURL != undefined && req.body.epTitle != undefined && req.body.podTitle != undefined && req.body.podSub != undefined && req.body.audioURL != undefined) {
             utils.check_if_mp3(req.body.audioURL, sendErrorPage, { request: res}, ()=> {
-                checkIfExistCustom(req, res, () => {
+                videoModule.check_if_exist_custom(req, res, () => {
                     bdd.Video.create({
                         email: req.body.email,
                         rss: "__custom__",

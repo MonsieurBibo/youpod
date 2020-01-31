@@ -5,6 +5,7 @@ const utils = require("../utils")
 const bdd = require("../../models/index.js")
 const Op = bdd.Sequelize.Op;
 const generation = require("../generation")
+const randtoken = require('rand-token');
 
 module.exports = {
 	index: (req, res, next) => {

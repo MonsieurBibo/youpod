@@ -1,16 +1,13 @@
 const bdd = require("../models/index.js")
 const utils = require("./utils")
+const videoModule = require("./video")
 
 module.exports = {
 	restart_generation: () => {
 		console.log("Reprise de générations...")
 		bdd.Video.findAll({where: {status: "during"}}).then((videos) => {
 			videos.forEach((v) => {
-				if (v.rss != "__custom__") {
-					generateFeed(v.rss, v.guid, v.template, v.id, v.font)
-				} else {
-					generateImgCustom(v.id);
-				}
+				videoModule.start_generation(v.id)
 			})
 		})
 	  
@@ -72,14 +69,10 @@ module.exports = {
 				if (nb < MAX_DURING) {
 					bdd.Video.findOne({where: {status: "waiting"}, order: [["priority", "DESC"], ["id", "ASC"]]}).then((video) => {
 						if(video != null) {
-						video.status = 'during'
-						video.save().then((video) => {
-							if (video.rss != "__custom__") {
-								generateFeed(video.rss, video.guid, video.template, video.id, video.font)
-							} else {
-								generateImgCustom(video.id);
-							}
-						})
+							video.status = 'during'
+							video.save().then((video) => {
+								videoModule.start_generation(video.id)
+							})
 						}
 					})
 				}

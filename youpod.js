@@ -6,15 +6,10 @@ const download = require('download');
 const { spawn } = require('child_process');
 const express = require('express')
 const bodyParser = require('body-parser');
-const randtoken = require('rand-token');
-const nodemailer = require("nodemailer");
 const puppeteer = require('puppeteer');
 const session = require('express-session');
 const csurf = require('csurf')
-const getMP3Duration = require('get-mp3-duration')
 const bdd = require(__dirname + "/models/index.js")
-const Op = bdd.Sequelize.Op;
-const fetch = require('node-fetch');
 
 require('dotenv').config()
 
@@ -88,40 +83,6 @@ app.get("/download/:id", m.download_ctrl.video)
 app.post("/api/video", m.api_ctrl.add_video);
 app.get("/api/video/:id", m.api_ctrl.get_video);
 app.get("/api/feed", m.api_ctrl.feed)
-
-function checkIfExistVideo(req, res, guid, cb) {
-  bdd.Video.findOne({where: {email: req.body.email, rss: req.body.rss, guid: guid, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
-    if (video == null) {
-      cb();
-    } else {
-      template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-
-      var render_object = {
-        "err_message": "Cette vidéo est déjà dans la liste d'attente!"
-      }
-    
-      res.setHeader("content-type", "text/html");
-      res.send(mustache.render(template, render_object))
-    }
-  })
-}
-
-function checkIfExistCustom(req, res, cb) {
-  bdd.Video.findOne({where: {email: req.body.email, epTitle: req.body.epTitle, epImg: req.body.imgURL, audioURL: req.body.audioURL, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
-    if (video == null) {
-      cb();
-    } else {
-      template = fs.readFileSync(path.join(__dirname, "/web/error.mustache"), "utf8")
-
-      var render_object = {
-        "err_message": "Cette vidéo est déjà dans la liste d'attente!"
-      }
-    
-      res.setHeader("content-type", "text/html");
-      res.send(mustache.render(template, render_object))
-    }
-  })
-}
 
 function generateImgSocial(feed_url, guid, id) {
 	console.log("Social " + id + " Démarage de la création")
@@ -218,147 +179,6 @@ function generateImgSocialCustom(id) {
   })
 }
 
-function generateImgCustom(id) {
-  console.log(id + " Démarage de la création");
-
-  bdd.Video.findByPk(id).then((video) => {
-    if (video.template != null && video.template != "") {
-      template = video.template
-    } else {
-      var template = fs.readFileSync(path.join(__dirname, "/template/default.mustache"), "utf8");
-    }
-
-    var renderObj = {
-      "imageURL": video.epImg,
-      "epTitle": video.epTitle,
-      "podTitle": video.podTitle,
-      "podSub": video.podSub,
-      "font": video.font,
-      "font_url": video.font.replace(/ /g, "+")
-    }
-
-    string = mustache.render(template, renderObj);
-
-    console.log(id + " Génération de l'image");
-    
-    (async () => {
-      const browser = await puppeteer.launch({
-        defaultViewport: {
-          width: 1920,
-          height: 1080
-        },
-        headless: true,
-        args: ['--no-sandbox']
-      });
-      const page = await browser.newPage();
-      await page.setContent(string);
-      await page.screenshot({path: path.join(__dirname, "/tmp/", `overlay_${id}.png`), omitBackground: true});
-    
-      await browser.close();
-      console.log(id + " Image générée!")
-
-      downloadAudioCustom(id, video.audioURL, video.epTitle)
-    })();
-  })
-}
-
-function generateFeed(feed_url, guid, temp, id, font) {
-  console.log(id + " Démarage de la création")
-  parser.parseURL(feed_url, (err, lFeed) => {
-    console.log(id + " Récupération du flux")
-    feed = lFeed
-
-    if (temp != "") {
-      template = temp
-    } else {
-      var template = fs.readFileSync(path.join(__dirname, "/template/default.mustache"), "utf8");
-    }
-
-    i = 0;
-    while(feed.items[i].guid != guid && i < feed.items.length) {
-      i++;
-    }
-
-    if (i == feed.items.length) {
-      bdd.Video.update({ status: "error", email: "error" }, {
-        where: {
-          id: id
-        }
-      })
-      return;
-    }
-
-    if(feed.items[i].itunes.image == undefined) {
-      img = feed.itunes.image ? feed.itunes.image : feed.image.url
-    } else {
-      img = feed.items[i].itunes.image
-    }
-
-    var renderObj = {
-      "imageURL": img,
-      "epTitle": feed.items[i].title,
-      "podTitle": feed.title,
-      "podSub": feed.itunes.subtitle,
-      "font_url": font.replace(/ /g, "+"),
-      "font": font
-    }
-
-    string = mustache.render(template, renderObj);
-
-    console.log(id + " Génération de l'image");
-    
-    (async () => {
-      const browser = await puppeteer.launch({
-        defaultViewport: {
-          width: 1920,
-          height: 1080
-        },
-        headless: true,
-        args: ['--no-sandbox']
-      });
-      const page = await browser.newPage();
-      await page.setContent(string);
-      await page.screenshot({path: path.join(__dirname, "/tmp/", `overlay_${id}.png`), omitBackground: true});
-    
-      await browser.close();
-      console.log(id + " Image générée!")
-      downloadAudio(id, feed.items[i].enclosure.url, feed.items[i].title)
-    })();
-  })
-}
-
-function sendErrorMail(o) {
-  template = fs.readFileSync(path.join(__dirname, "/web/mail_error.mustache"), "utf8")
-
-  renderObj = {
-    file_url : o.url,
-    host_url: process.env.HOST
-  }
-
-  const mailOptions = {
-    from: 'YouPod@youpod.io', // sender address
-    to: o.content.email, // list of receivers
-    subject: `Erreur lors de la génération!`, // Subject line
-    html: mustache.render(template, renderObj)
-  };
-
-  getTransporter((transporter) => {
-    transporter.sendMail(mailOptions, function (err, info) {
-      if(err) return console.log(err)
-    });
-
-    if (o.content.constructor.name == "Video") {
-      fs.unlinkSync(path.join(__dirname, "/tmp/", `overlay_${o.content.id}.png`))
-    } else {
-      fs.unlinkSync(path.join(__dirname, "/tmp/", `social_${o.content.id}.png`))
-    }
-
-    o.content.status = "error"
-    o.content.email = "deleted"
-    o.content.save();
-  }) 
-}
-
 function downloadAudioSocial(id, audio_url) {
   console.log("Social " + id + " Démarage du téléchargement")
   bdd.Social.findByPk(id).then(social => {
@@ -369,28 +189,6 @@ function downloadAudioSocial(id, audio_url) {
         generateVideoSocial(id);
       });
     })
-  })
-}
-
-function downloadAudioCustom(id, audio_url, ep_title) {
-  console.log(id + " Démarage du téléchargement")
-  download(audio_url).then(data => {
-    fs.writeFileSync(path.join(__dirname, `/tmp/audio_${id}.mp3`), data);
-    console.log(id + " Fichier téléchargé!");
-    generateVideo(id, ep_title);
-  });
-}
-
-function downloadAudio(id, audio_url, ep_title) {
-  console.log(id + " Démarage du téléchargement")
-  bdd.Video.findByPk(id).then(video => {
-    checkIfMP3(audio_url, sendErrorMail, {url: audio_url, content: video}, () => {
-      download(audio_url).then(data => {
-        fs.writeFileSync(path.join(__dirname, `/tmp/audio_${id}.mp3`), data);
-        console.log(id + " Fichier téléchargé!");
-        generateVideo(id, ep_title);
-      });
-    })  
   })
 }
 
@@ -427,50 +225,6 @@ function generateVideoSocial(id) {
 	  });
 	});
   })
-}
-
-function generateVideo(id, ep_title) {
-  console.log(id + " Démarage de la génération de la vidéo")
-
-  duration = Math.trunc(getMP3Duration(fs.readFileSync(path.join(__dirname, "tmp/", `audio_${id}.mp3`)))/1000) + 1
-
-  var ol = spawn("ffmpeg", ["-y", "-loop", 1, "-i", `./tmp/overlay_${id}.png`, "-filter_complex", "overlay", "-vcodec", "libvpx-vp9", "-i", "./assets/loop.webm", "-t", 20, "-r", 60, "-ss", 0.1, `./tmp/loop_${id}.mp4`])
-  
-  ol.stdout.on('data', function (data) {
-    console.log(id + ' stdout: ' + data);
-  });
-
-  ol.stderr.on('data', function (data) {
-    console.log(id + ' stderr: ' + data);
-  });
-
-  ol.on('close', function (code) {
-    var child = spawn("ffmpeg", ["-y", "-stream_loop", -1, "-i", `./tmp/loop_${id}.mp4`, "-i", `./tmp/audio_${id}.mp3`, "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ac", "2", "-shortest", "-map", "0:v", "-map", "1:a", `${process.env.EXPORT_FOLDER}/output_${id}.mp4`]);
-
-    child.stdout.on('data', function (data) {
-      console.log(id + ' stdout: ' + data);
-    });
-  
-    child.stderr.on('data', function (data) {
-      console.log(id + ' stderr: ' + data);
-    });
-  
-    child.on('close', function (code) {
-      console.log(id + " Vidéo générée!")
-      bdd.Video.update({ status: "finished", end_timestamp: Date.now() }, {
-        where: {
-          id: id
-        }
-      }).then(() => { 
-        fs.unlinkSync(path.join(__dirname, "/tmp/", `overlay_${id}.png`))
-        fs.unlinkSync(path.join(__dirname, "/tmp/", `audio_${id}.mp3`))
-        fs.unlinkSync(path.join(__dirname, "/tmp/", `loop_${id}.mp4`))
-    
-        sendMail(id, ep_title);
-        initNewGeneration();
-      })
-    });
-  });
 }
 
 function sendMailSocial(id) {
@@ -514,94 +268,6 @@ function sendMailSocial(id) {
         social.save();
       })
     })
-  })
-}
-
-function sendMail(id, ep_title) {
-  bdd.Video.findByPk(id).then((video) => {
-    m.utils.get_option("KEEPING_TIME", (KEEPING_TIME) => { 
-      if (video.rss != "__custom__") {
-        template = fs.readFileSync(path.join(__dirname, "/web/mail.mustache"), "utf8")
-        renderObj = {
-          "rss_link": video.rss,
-          "keeping_time": KEEPING_TIME,
-          "epTitle": ep_title,
-          "video_link": process.env.HOST + "/download/" + id + "?token=" + video.access_token,
-          "website_url": process.env.HOST
-        }
-      } else {
-        template = fs.readFileSync(path.join(__dirname, "/web/mail_custom.mustache"), "utf8")
-        renderObj = {
-          "ep_title": video.epTitle,
-          "keeping_time": KEEPING_TIME,
-          "video_link": process.env.HOST + "/download/" + id + "?token=" + video.access_token,
-          "website_url": process.env.HOST
-        }
-      }
-
-      m.utils.get_option("SMTP_DOMAIN", (SMTP_DOMAIN) => {
-        const mailOptions = {
-          from: 'YouPod@' + SMTP_DOMAIN, // sender address
-          to: video.email, // list of receivers
-          subject: `Vidéo générée sur Youpod : ${ep_title}`, // Subject line
-          html: mustache.render(template, renderObj)
-        };
-  
-        getTransporter((transporter) => {
-          transporter.sendMail(mailOptions, function (err, info) {
-            if(err) return console.log(err)
-          });
-          
-          if (video.googleToken != undefined) {
-            yt.upload(video.googleToken, path.join(m.utils.path_evalute(process.env.EXPORT_FOLDER), `output_${video.id}.mp4`), video)
-            video.googleToken = "deleted"
-          }
-    
-          video.email = "deleted"
-          video.save()
-        })
-      })
-    })
-  })
-}
-
-function getTransporter(cb) {
-  m.utils.get_option("MAIL_SERVICE", (MAIL_SERVICE) => {
-    if (MAIL_SERVICE == "gmail") {
-      m.utils.get_option("GMAIL_ADDR", (GMAIL_ADDR)=> {
-        m.utils.get_option("GMAIL_PWD", (GMAIL_PWD) => {
-          transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: GMAIL_ADDR,
-                pass: GMAIL_PWD
-              }
-          });
-
-          cb(transporter)
-        })
-      })
-    } else {
-      m.utils.get_option("SMTP_HOST", (SMTP_HOST) => {
-        m.utils.get_option("SMTP_PORT", (SMTP_PORT) => {
-          m.utils.get_option("SMTP_USERNAME", (SMTP_USERNAME) => {
-            m.utils.get_option("SMTP_PASSWORD", (SMTP_PASSWORD) => {
-              transporter = nodemailer.createTransport({
-                host: SMTP_HOST,
-                port: SMTP_PORT,
-                secure: false, // upgrade later with STARTTLS
-                auth: {
-                  user: SMTP_USERNAME,
-                  pass: SMTP_PASSWORD
-                }
-              });
-
-              cb(transporter)
-            })
-          })
-        })
-      })
-    }
   })
 }
 
