@@ -80,55 +80,9 @@ app.post("/addvideocustom", csrfProtection, m.login_ctrl.check_logged, m.video_c
 app.get("/custom", csrfProtection, m.login_ctrl.check_logged, m.video_ctrl.custom);
 app.get("/", csrfProtection, m.login_ctrl.check_logged, m.video_ctrl.index);
 
-app.get("/download/social/:id", (req, res) => {
-  if (req.query.token != undefined) {
-    bdd.Social.findByPk(req.params.id).then((social) => {
-      if (req.query.token != social.access_token) {
-        res.status(403).send("Vous n'avez pas accès à cette vidéo pour réseaux sociaux")
-      } else {
-        if (social.status == 'finished') {
-          res.download(path.join(m.utils.path_evalute(process.env.EXPORT_FOLDER), `social_${social.id}.mp4`), `youpod_social_${social.end_timestamp}.mp4`)
-        } else if (social.status == 'deleted') {
-          res.status(404).send("Cette vidéo à été supprimée du site!")
-        } else if (social.status == 'during') {
-          res.status(404).send("Cette vidéo est encore en cours de traitement, revenez plus tard!")
-        } else {
-          res.status(404).send("Cette vidéo est encore dans la file d'attente.")
-        }
-      }
-    }).catch((err) => {
-      res.status(404).send("Cette vidéo n'est pas disponible...")
-    })
-  } else {
-    res.status(404).send("Vous n'avez pas mis de token d'accès à une vidéo")
-  }
-
-})
-
-app.get("/download/:id", (req, res) => {
-  if (req.query.token != undefined) {
-    bdd.Video.findByPk(req.params.id).then((video) => {
-      if (req.query.token != video.access_token) {
-        res.status(403).send("Vous n'avez pas accès à cette vidéo")
-      } else {
-        if (video.status == 'finished') {
-          res.download(path.join(m.utils.path_evalute(process.env.EXPORT_FOLDER), `output_${video.id}.mp4`), `youpod_${video.end_timestamp}.mp4`)
-        } else if (video.status == 'deleted') {
-          res.status(404).send("Cette vidéo à été supprimée du site!")
-        } else if (video.status == 'during') {
-          res.status(404).send("Cette vidéo est encore en cours de traitement, revenez plus tard!")
-        } else {
-          res.status(404).send("Cette vidéo est encore dans la file d'attente.")
-        }
-      }
-    }).catch((err) => {
-      res.status(404).send("Cette vidéo n'est pas disponible...")
-    })
-  } else {
-    res.status(404).send("Vous n'avez pas mis de token d'accès à une vidéo")
-  }
-
-})
+// Routes Download
+app.get("/download/social/:id", m.download_ctrl.social)
+app.get("/download/:id", m.download_ctrl.video)
 
 function checkIfExistVideo(req, res, guid, cb) {
   bdd.Video.findOne({where: {email: req.body.email, rss: req.body.rss, guid: guid, status: {[Op.or] : ["waiting", "during", "finished"]}}}).then((video) => {
