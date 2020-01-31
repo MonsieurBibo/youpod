@@ -6,5 +6,6 @@ module.exports = {
 	admin_ctrl: require("./controlers/admin_ctrl"),
 	social_ctrl: require("./controlers/social_ctrl"),
 	video_ctrl: require("./controlers/video_ctrl"),
-	download_ctrl: require("./controlers/download_ctrl")
+	download_ctrl: require("./controlers/download_ctrl"),
+	api_ctrl: require("./controlers/api_ctrl")
 }
