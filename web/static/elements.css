@@ -548,3 +548,6 @@ textarea {
     padding-top: 2rem;
 }
 
+.footer a{
+    text-decoration: underline;
+}
