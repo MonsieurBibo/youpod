@@ -449,7 +449,7 @@ textarea {
 
 .button{
     background-color: #3052b3;
-    border-radius: 10px;
+    border-radius: 7px;
     width: 90%;
     max-width: 800px;
     margin-right: auto;
@@ -461,14 +461,13 @@ textarea {
 .bigbutton{
     flex-direction: column;
     align-items: center;
-    filter: drop-shadow(0px 0px 5px #888);
-    
+    padding: 5px;
 }
 
 .buttonimage{
-    max-width: 50px;
-    padding-right: 5%;
-    width: 20%;
+    max-width: 25px;
+    padding-right: 7px;
+    width: 7%;
     padding-top: 5px;
     padding-bottom: 5px;
 }
@@ -492,9 +491,9 @@ textarea {
 
 
 
-/*SUCCESS*/
+/*MESSAGE*/
 
-.successframe{
+.messageframe{
     background-color: #3052b3;
     width: 600px;
     margin-right: auto;
@@ -535,8 +534,17 @@ textarea {
     color: white;
     text-decoration: underline;
 }
-.successend{
+.submessage{
     font-size: 60%;
 }
 
+/*FOOTER*/
+
+.footer {
+    font-size: 60%;
+    color: #6c757d!important;
+    text-align: center!important;
+    margin-bottom: 2rem;
+    padding-top: 2rem;
+}
 

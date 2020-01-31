@@ -1,0 +1,289 @@
+<html>
+    <link rel="stylesheet" type="text/css" href="elements.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+
+<body>
+<div class="wrapper">
+<h1>Header</h1>
+<!--HOME-->
+<div class="container column">
+    <h2>Partagez gratuitement votre podcast audio en vidéo </h2>
+    <p>Publiez vos créations audio <br>sur YouTube et les réseaux sociaux, <br>une émission complète ou un extrait.</p>
+    <p>C’est gratuit, rapide et <u>sans inscription !</u></p>
+    <div class="stats">
+        <img src="./stats.svg" class="statslogo">
+        <div class="statstext">Depuis son lancement, YouPod a généré<br>
+            <b>169 vidéos</b> et <b>17 extraits</b><br>
+            provenant de <b>34 flux RSS</b> différents </div>
+    </div>
+</div>
+
+
+
+<!--1-2-3 steps header-->
+<h2>Steps</h2>
+
+    <div class="container column">
+      
+      <div class="steps">
+            <a href="#" class="onestep ">
+            1
+            </a>
+            <div class="onestep onestepactive">
+            2
+            </div> 
+            <div class="onestep">
+            3
+            </div> 
+        </div>
+        <div class="line"></div>
+    </div>
+
+<!--Toggle with two options-->
+<h2>Toggle</h2>
+
+    <div class="container">
+        <div class="toggleelements">
+          <a href="#" class="toggleoption"><img class="toggleimage" src="./RSS.svg"> <p>Flux RSS</p></a>
+          <div class="toggle">
+              <div class="togglebutton togglebuttonleft"></div>
+          </div>
+          <a href="#" class="toggleoption"><img class="toggleimage" src="./MP3.svg"><p>Fichier audio</p></a>
+        </div>  
+    </div>
+<!--Radio-->
+<h2>Radio</h2>
+<div class="container column">
+    <a href="#" class="radioelement">
+        <div class="radiopoint"><div class=""></div></div>
+        <img class="radioimage" src="./extract.svg">
+        <div class="radiolabel">
+            Extrait
+        </div>
+        
+    </a>
+
+    <a href="#" class="radioelement">
+        <div class="radiopoint"><div class="radioactive"></div></div>
+        <img class="radioimage" src="./show.svg">
+        <div class="radiolabel">
+            Emission
+        </div>
+        
+    </a>
+    <a href="#" class="radioelement">
+        <div class="radiopoint"><div class=""></div></div>
+        <img class="radioimage" src="./wide.svg">
+        <div class="radiolabel">
+            Vidéo écran large
+            <p class="tip">Idéal pour YouTube</p>
+        </div>
+        
+    </a>
+
+    <a href="#" class="radioelement">
+        <div class="radiopoint"><div class="radioactive"></div></div>
+        <img class="radioimage" src="./square.svg">
+        <div class="radiolabel">
+            Vidéo carrée
+            <p class="tip">Idéal pour Facebook et Twitter</p>
+        </div>
+        
+    </a>
+    <a href="./3.1.html" class="radioelement">
+        <div class="grow"></div>
+        <div class="radiopoint"><div class=""></div></div>
+        <img class="radioimage radiosmall" src="./advanced.svg">
+        <div class="radiolabel">
+            Personnaliser
+        </div>
+    </a>
+</div>
+<!--Connect-->
+<h2>Connexions</h2>
+<div class="container column">
+    <a href="#" class="connectelement facebook">
+        <img class="connectimage" src="./facebook.svg">
+        <div class="connectlabel">
+            Se connecter à Facebook
+        </div>        
+    </a>
+    <div class="connectelement youtube">
+        <img class="connectimage" src="./youtube.svg">
+        <div class="connectlabel">
+            Phil_Goud
+        </div>
+        <a href="#" class="connectimage"><img  src="./logout.svg"></a>
+    </div>
+    <a href="#" class="connectelement twitter">
+        <img class="connectimage" src="./twitter.svg">
+        <div class="connectlabel">
+            Se connecter à Twitter
+        </div>
+    </a>
+</div>
+
+<!--Formulaire-->
+<h2>Formulaire</h2>
+<div class="container">
+    <form action="" autocomplete="on"> 
+          <div class="floating-label">
+            <input class="floating-input" type="text" id="imgURL" name="imgURL" placeholder="URL de votre image" required autofocus>
+            <label for="imgURL">URL de votre image</label>
+          </div>
+        
+           <div class="floating-label">
+            <input class="floating-input" type="text" id="epTitle" name="epTitle" placeholder="Titre de votre épisode" required autofocus>
+            <label for="epTitle">Titre de votre épisode</label>
+          </div>
+        
+           <div class="floating-label">
+            <input class="floating-input" type="text" id="podTitle" name="podTitle" placeholder="Titre de votre émission" required autofocus>
+            <label for="podTitle">Titre de votre émission</label>
+          </div>
+        
+            <div class="floating-label">
+            <input class="floating-input" type="text" id="podSub" name="podSub" placeholder="Slogan de votre émission" required autofocus>
+            <label for="podSub">Slogan de votre émission</label>
+          </div>
+        
+         <div class="floating-label">
+            <input class="floating-input" type="url" id="audioURL" name="audioURL" placeholder="URL de votre audio" required autofocus>
+            <label for="audioURL">URL de votre audio</label>
+          </div>
+          
+           <div class="floating-label">
+            <input class="floating-input" type="email" id="email" name="email" placeholder="Votre adresse mail" required autofocus>
+            <label for="email">Votre adresse mail</label>
+          </div>
+
+          <div class="select-style">
+            <select>
+              <option value="">Choisissez un épisode</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+              <option value="lorem">lorem ipsum dolor sit amet consectetur adipiscing elit</option>
+            </select>
+          </div>
+
+    </form>
+
+</div>
+
+
+<!--Buttons-->
+<!--Full width button-->
+<h2>Buttons</h2>
+        <div class="container">
+            <a href="#" class="button">
+                <div class="buttonlabel">
+                    Commencer
+                </div>
+                <img class="buttonimage" src="./next.svg">
+            </a>
+        </div>
+
+<!--Half width button-->
+    <div class="container">
+    <a href="#" class="halfvoid"> Retour</a>
+    <a href="#" class="button">
+      <div class="buttonlabel">
+          Suivant
+      </div>
+      <img class="buttonimage" src="./next.svg">
+    </a>
+    </div>
+    
+<!--BIG button-->
+
+<div class="container">
+    <a href="#" class="button bigbutton">
+        <img class="bigbuttonimage" src="./convert.svg">
+        <div class="buttonlabel">
+            Convertir
+        </div>
+    </a>
+</div>
+
+<!--MESSAGE-->
+<div class="container">
+    <div class="messageframe">
+        <h2>Conversion lancée !</h2>
+        <p>Voici un rappel des paramètres</p>    
+        <div class="parameters">
+            <h3>Paramètres de l'encodage</h3>
+            <div class="oneparameter">
+                <div class="paramlabel">Durée</div><div class="paraminfo">Emission complète</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">Format</div><div class="paraminfo">Vidéo carrée</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">Source</div><div class="paraminfo">Fichier audio</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">URL de l'image</div><div class="paraminfo">http://www.5z8.info/hot-older-goats.mov_x4l8fw_ip-stealer</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">Titre de l'épisode</div><div class="paraminfo">lorem ipsum dolor sit amet consectetur adipiscing elit</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">Titre de l'émission</div><div class="paraminfo">lorem ipsum dolor sit amet consectetur adipiscing elit</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">Slogan de l'émission</div><div class="paraminfo">lorem ipsum dolor sit amet consectetur adipiscing elit</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">URL de l'audio</div><div class="paraminfo">http://www.5z8.info/hot-older-goats.mov_x4l8fw_ip-stealer</div>
+            </div>
+            <h3>Paramètres de publication</h3>
+            <div class="oneparameter">
+                <div class="paramlabel">Adresse mail</div><div class="paraminfo">phil@podcasteo.fr</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">Compte Facebook</div><div class="paraminfo">Thomas FOREST</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">Compte YouTube</div><div class="paraminfo">zePhil_Goud</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">Compte Twitter</div><div class="paraminfo">@Phil_Goud</div>
+            </div>
+            <h3>Personnalisation</h3>
+            <div class="oneparameter">
+                <div class="paramlabel">Template</div><div class="paraminfo">Oui</div>
+            </div>
+            <div class="oneparameter">
+                <div class="paramlabel">Police</div><div class="paraminfo">Montserrat</div>
+            </div>
+        </div>
+        <div class="submessage">
+        <p>Vous pouvez quitter cette page</p>
+        <p>ou</p>
+        <p><a href="#" class="leave">Revenir à l'accueil pour créer une nouvelle vidéo</a></p>
+        </div>
+    </div>
+</div>
+
+<!--FOOTER-->
+<div class="footer">
+    <p>Youpod est un projet OpenSource développé par <a href="https://twitter.com/Bigaston">Bigaston</a>, <a href="https://twitter.com/Phil_Goud">Phil</a> et <a href="https://twitter.com/PofMagicfingers">Pof</a>.</p>
+    <p><a href="http://docs.youpod.io/confidentialite">Confidentialité</a> | <a href="https://twitter.com/Youpodio">Twitter</a> | <a href="https://github.com/Bigaston/youpod">Github</a></p>
+</div>
+
+
+
+<!--END-->
+</div>
+</body>
+</html>
