@@ -11,6 +11,7 @@ En réalité, ce n'est pas très compliqué : Il suffit de prendre l'audio, et u
 On a quand même ajouté une petite boucle vidéo derrière pour que ça ressemble un peu plus à quelque chose.
 
 [![Demo](https://img.youtube.com/vi/Lpa5UtjI9NE/0.jpg)](https://www.youtube.com/watch?v=Lpa5UtjI9NE)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FBigaston%2Fyoupod.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FBigaston%2Fyoupod?ref=badge_shield)
 
 Source : https://robotsettondeuses.lepodcast.fr/
 
@@ -75,3 +76,7 @@ Si vous souhaitez me soutenir financièrement dans ce projet, vous pouvez passer
 
 En cas de problème ou de questions, passez directement par les [Issues](https://github.com/Bigaston/youpod/issues) ou par [mon Twitter](https://twitter.com/Bigaston) !
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FBigaston%2Fyoupod.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FBigaston%2Fyoupod?ref=badge_large)
